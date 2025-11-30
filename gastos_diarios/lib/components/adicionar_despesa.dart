@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-class AdicionarReceitaDialog extends StatefulWidget {
-  const AdicionarReceitaDialog({super.key});
+class AdicionarDespesaDialog extends StatefulWidget {
+  const AdicionarDespesaDialog({super.key});
 
   static Future<void> show(BuildContext context) {
     return showDialog(
@@ -13,14 +13,15 @@ class AdicionarReceitaDialog extends StatefulWidget {
         return MediaQuery.removeViewInsets(
           context: dialogContext,
           removeBottom: true,
-          child: const AdicionarReceitaDialog(),
+          child: const AdicionarDespesaDialog(),
         );
       },
     );
   }
 
   @override
-  State<AdicionarReceitaDialog> createState() => _AdicionarReceitaDialogState();
+  State<AdicionarDespesaDialog> createState() =>
+      _AdicionarDespesaDialogState();
 }
 
 class CurrencyPtBrInputFormatter extends TextInputFormatter {
@@ -57,11 +58,11 @@ class CurrencyPtBrInputFormatter extends TextInputFormatter {
   }
 }
 
-class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
+class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
   final _valorController = TextEditingController();
   final _descricaoController = TextEditingController();
   final _dataController = TextEditingController();
-  String _categoriaSelecionada = 'Salário';
+  String _categoriaSelecionada = 'Alimentação';
 
   final _currencyFormatter = CurrencyPtBrInputFormatter(maxDigits: 12);
 
@@ -101,14 +102,14 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: const BoxDecoration(
-                color: Color(0xFF00A86B),
+                color: Color(0xFFE53935),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: Row(
                 children: [
                   const Expanded(
                     child: Text(
-                      'Adicionar Receita',
+                      'Adicionar Despesa',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -125,6 +126,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
               ),
             ),
 
+            // Corpo
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
               child: Column(
@@ -151,7 +153,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                     controller: _descricaoController,
                     style: textFieldStyle,
                     decoration:
-                        _inputDecoration(hintText: 'Ex: Salário do mês'),
+                        _inputDecoration(hintText: 'Ex: Compras no mercado'),
                   ),
                   const SizedBox(height: 12),
 
@@ -175,12 +177,16 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                         dropdownColor: Colors.white,
                         items: const [
                           DropdownMenuItem(
-                            value: 'Salário',
-                            child: Text('Salário'),
+                            value: 'Alimentação',
+                            child: Text('Alimentação'),
                           ),
                           DropdownMenuItem(
-                            value: 'Freelancer',
-                            child: Text('Freelancer'),
+                            value: 'Transporte',
+                            child: Text('Transporte'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Moradia',
+                            child: Text('Moradia'),
                           ),
                           DropdownMenuItem(
                             value: 'Outros',
@@ -215,7 +221,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                           return Theme(
                             data: Theme.of(context).copyWith(
                               colorScheme: const ColorScheme.light(
-                                primary: Color(0xFF00A86B),
+                                primary: Color(0xFFE53935),
                                 onPrimary: Colors.white,
                                 surface: Colors.white,
                                 onSurface: Colors.black,
@@ -259,10 +265,11 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
+                            // TODO: salvar a despesa
                             Navigator.of(context).pop();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00A86B),
+                            backgroundColor: const Color(0xFFE53935),
                             padding:
                                 const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
@@ -332,7 +339,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
-          color: Color(0xFF00A86B),
+          color: Color(0xFFE53935),
           width: 1.4,
         ),
       ),
