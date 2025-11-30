@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../components/adicionar_receita.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -7,6 +8,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE0E4EC),
+      resizeToAvoidBottomInset: false, // não deixa o teclado mexer na tela
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -227,7 +229,7 @@ class _BalanceCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
-              Icons.account_balance_wallet_rounded, 
+              Icons.account_balance_wallet_rounded,
               color: Colors.white,
               size: 20,
             ),
@@ -287,7 +289,19 @@ class _ActionsGrid extends StatelessWidget {
         label: 'Receita',
         icon: Icons.add,
         color: const Color(0xFF00A86B),
-        onTap: () {},
+        onTap: () {
+          showDialog(
+            context: context,
+            barrierDismissible: true,
+            builder: (dialogContext) {
+              return MediaQuery.removeViewInsets(
+                context: dialogContext,
+                removeBottom: true, // diálogo ignora teclado
+                child: const AdicionarReceitaDialog(),
+              );
+            },
+          );
+        },
       ),
       _ActionItemData(
         label: 'Despesa',
@@ -425,12 +439,12 @@ class _LastTransactionsCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
+      child: const Padding(
+        padding: EdgeInsets.all(18),
         child: Column(
           children: [
             Row(
-              children: const [
+              children: [
                 Text(
                   'Últimas Transações',
                   style: TextStyle(
@@ -441,9 +455,9 @@ class _LastTransactionsCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Column(
-              children: const [
+              children: [
                 _EmptyTransactionsIcon(),
                 SizedBox(height: 12),
                 Text(
