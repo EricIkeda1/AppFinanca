@@ -6,6 +6,7 @@ import '../components/relatorio.dart';
 import '../components/operacao_automatica.dart';
 import '../components/perfil.dart';
 import '../components/configuracoes.dart';
+import '../components/opcoes.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -63,7 +64,6 @@ class HomePage extends StatelessWidget {
 class _DashboardAppBar extends StatelessWidget {
   const _DashboardAppBar();
 
-  // bloco "Olá, João Silva  [avatar]"
   static final GlobalKey _profileBlockKey = GlobalKey();
 
   void _showProfileMenu(BuildContext context) async {
@@ -159,7 +159,6 @@ class _DashboardAppBar extends StatelessWidget {
         ConfiguracoesDialog.show(context);
         break;
       case 'sair':
-        // TODO: implementar logout
         break;
       default:
         break;
@@ -452,7 +451,7 @@ class _ActionsGrid extends StatelessWidget {
         icon: Icons.settings_rounded,
         color: const Color(0xFF455A64),
         onTap: () {
-          // pode abrir ConfiguracoesDialog.show(context); se preferir por aqui também
+          OpcoesDialog.show(context);
         },
       ),
     ];
