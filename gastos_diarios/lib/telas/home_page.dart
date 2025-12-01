@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../components/adicionar_receita.dart';
 import '../components/adicionar_despesa.dart';
+import '../components/movimentos.dart';
+import '../components/relatorio.dart';
+import '../components/operacao_automatica.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -9,7 +12,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE0E4EC),
-      resizeToAvoidBottomInset: false, // não deixa o teclado mexer na tela
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -73,8 +76,8 @@ class _DashboardAppBar extends StatelessWidget {
               color: Color(0xFF00C853),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.attach_money,
-                color: Colors.white, size: 22),
+            child:
+                const Icon(Icons.attach_money, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -313,19 +316,25 @@ class _ActionsGrid extends StatelessWidget {
         label: 'Movimentos',
         icon: Icons.table_rows_rounded,
         color: const Color(0xFF1565C0),
-        onTap: () {},
+        onTap: () {
+          MovimentosDialog.show(context);
+        },
       ),
       _ActionItemData(
         label: 'Relatório',
         icon: Icons.calendar_today_rounded,
         color: const Color(0xFF8E24AA),
-        onTap: () {},
+        onTap: () {
+          RelatorioDialog.show(context);
+        },
       ),
       _ActionItemData(
         label: 'Automáticas',
         icon: Icons.autorenew_rounded,
         color: const Color(0xFFEF6C00),
-        onTap: () {},
+        onTap: () {
+          OperacoesAutomaticasDialog.show(context);
+        },
       ),
       _ActionItemData(
         label: 'Opções',
