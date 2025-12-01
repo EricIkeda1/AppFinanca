@@ -7,6 +7,7 @@ import '../components/operacao_automatica.dart';
 import '../components/perfil.dart';
 import '../components/configuracoes.dart';
 import '../components/opcoes.dart';
+import '../login/login.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -151,15 +152,24 @@ class _DashboardAppBar extends StatelessWidget {
 
     switch (selected) {
       case 'perfil':
-        Navigator.of(context).push(
+        Navigator.push(
+          context,
           MaterialPageRoute(builder: (_) => const PerfilPage()),
         );
         break;
+
       case 'config':
         ConfiguracoesDialog.show(context);
         break;
+
       case 'sair':
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+          (Route<dynamic> route) => false,
+        );
         break;
+
       default:
         break;
     }
@@ -180,8 +190,8 @@ class _DashboardAppBar extends StatelessWidget {
               color: Color(0xFF00C853),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.attach_money,
-                color: Colors.white, size: 22),
+            child:
+                const Icon(Icons.attach_money, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -216,8 +226,11 @@ class _DashboardAppBar extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: Color(0xFFB0BEC5),
                   ),
-                  child: const Icon(Icons.person,
-                      size: 20, color: Colors.white),
+                  child: const Icon(
+                    Icons.person,
+                    size: 20,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -261,8 +274,7 @@ class _SummaryCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
             Expanded(
@@ -439,7 +451,7 @@ class _ActionsGrid extends StatelessWidget {
         },
       ),
       _ActionItemData(
-        label: 'Automáticas',
+        label: 'Automática',
         icon: Icons.autorenew_rounded,
         color: const Color(0xFFEF6C00),
         onTap: () {
@@ -460,8 +472,7 @@ class _ActionsGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
-      gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 10,
@@ -505,8 +516,7 @@ class _ActionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         onTap: item.onTap,
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
             children: [
               Container(
