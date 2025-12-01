@@ -4,6 +4,8 @@ import '../components/adicionar_despesa.dart';
 import '../components/movimentos.dart';
 import '../components/relatorio.dart';
 import '../components/operacao_automatica.dart';
+import '../components/perfil.dart';
+import '../components/configuracoes.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -61,6 +63,109 @@ class HomePage extends StatelessWidget {
 class _DashboardAppBar extends StatelessWidget {
   const _DashboardAppBar();
 
+  // bloco "Olá, João Silva  [avatar]"
+  static final GlobalKey _profileBlockKey = GlobalKey();
+
+  void _showProfileMenu(BuildContext context) async {
+    final RenderBox block =
+        _profileBlockKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    final Offset blockPosition = block.localToGlobal(Offset.zero);
+    final Size blockSize = block.size;
+
+    const double menuWidth = 220;
+
+    final double left =
+        blockPosition.dx + blockSize.width / 2 - menuWidth / 2;
+    final double top = blockPosition.dy + blockSize.height + 6;
+
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        left,
+        top,
+        overlay.size.width - left - menuWidth,
+        overlay.size.height - top,
+      ),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
+      items: [
+        PopupMenuItem<String>(
+          value: 'perfil',
+          child: Row(
+            children: const [
+              Icon(Icons.person_outline, size: 18, color: Color(0xFF455A64)),
+              SizedBox(width: 8),
+              Text(
+                'Meu Perfil',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'config',
+          child: Row(
+            children: const [
+              Icon(Icons.settings_outlined,
+                  size: 18, color: Color(0xFF455A64)),
+              SizedBox(width: 8),
+              Text(
+                'Configurações',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<String>(
+          value: 'sair',
+          child: Row(
+            children: const [
+              Icon(Icons.logout, size: 18, color: Color(0xFFE53935)),
+              SizedBox(width: 8),
+              Text(
+                'Sair',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFE53935),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    switch (selected) {
+      case 'perfil':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PerfilPage()),
+        );
+        break;
+      case 'config':
+        ConfiguracoesDialog.show(context);
+        break;
+      case 'sair':
+        // TODO: implementar logout
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -76,8 +181,8 @@ class _DashboardAppBar extends StatelessWidget {
               color: Color(0xFF00C853),
             ),
             alignment: Alignment.center,
-            child:
-                const Icon(Icons.attach_money, color: Colors.white, size: 22),
+            child: const Icon(Icons.attach_money,
+                color: Colors.white, size: 22),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -90,24 +195,33 @@ class _DashboardAppBar extends StatelessWidget {
               ),
             ),
           ),
-          const Text(
-            'Olá, João Silva',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
+          GestureDetector(
+            key: _profileBlockKey,
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _showProfileMenu(context),
+            child: Row(
+              children: [
+                const Text(
+                  'Olá, João Silva',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFB0BEC5),
+                  ),
+                  child: const Icon(Icons.person,
+                      size: 20, color: Colors.white),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFB0BEC5),
-            ),
-            child:
-                const Icon(Icons.person, size: 20, color: Colors.white),
           ),
         ],
       ),
@@ -154,8 +268,7 @@ class _SummaryCard extends StatelessWidget {
           children: [
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
@@ -224,8 +337,7 @@ class _BalanceCard extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           const Expanded(
@@ -256,8 +368,7 @@ class _BalanceText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text(
           'Saldo',
@@ -340,7 +451,9 @@ class _ActionsGrid extends StatelessWidget {
         label: 'Opções',
         icon: Icons.settings_rounded,
         color: const Color(0xFF455A64),
-        onTap: () {},
+        onTap: () {
+          // pode abrir ConfiguracoesDialog.show(context); se preferir por aqui também
+        },
       ),
     ];
 
@@ -393,8 +506,8 @@ class _ActionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         onTap: item.onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 20, vertical: 12),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
             children: [
               Container(
