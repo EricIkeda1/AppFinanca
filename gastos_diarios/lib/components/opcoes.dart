@@ -27,6 +27,8 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
   bool _notificacoes = true;
   bool _backupAutomatico = true;
 
+  static const double _baseFontSize = 18;
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -57,12 +59,12 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                 ),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Opções',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: _baseFontSize + 2,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -73,7 +75,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       child: const Icon(
                         Icons.close,
                         color: Colors.white,
-                        size: 20,
+                        size: 22,
                       ),
                     ),
                   ],
@@ -93,8 +95,9 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       onChanged: (v) {
                         setState(() => _modoEscuro = v);
                       },
+                      baseFontSize: _baseFontSize,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     _OpcaoCard(
                       icon: Icons.notifications_none_rounded,
                       title: 'Notificações',
@@ -103,8 +106,9 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       onChanged: (v) {
                         setState(() => _notificacoes = v);
                       },
+                      baseFontSize: _baseFontSize,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     _OpcaoCard(
                       icon: Icons.backup_outlined,
                       title: 'Backup Automático',
@@ -113,11 +117,12 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       onChanged: (v) {
                         setState(() => _backupAutomatico = v);
                       },
+                      baseFontSize: _baseFontSize,
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
                     const Divider(height: 1, color: Color(0xFFE5E9F0)),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
 
                     Align(
                       alignment: Alignment.centerLeft,
@@ -127,22 +132,25 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                           _OpcaoTexto(
                             text: 'Exportar Dados',
                             color: Colors.black87,
+                            fontSize: _baseFontSize - 2,
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: 10),
                           _OpcaoTexto(
                             text: 'Importar Dados',
                             color: Colors.black87,
+                            fontSize: _baseFontSize - 2,
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: 10),
                           _OpcaoTexto(
                             text: 'Limpar Todos os Dados',
                             color: Color(0xFFE53935),
+                            fontSize: _baseFontSize - 2,
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
 
                     SizedBox(
                       width: double.infinity,
@@ -151,7 +159,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF3F4A5A),
                           padding: const EdgeInsets.symmetric(
-                              vertical: 12),
+                              vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -159,6 +167,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                         child: const Text(
                           'Fechar',
                           style: TextStyle(
+                            fontSize: _baseFontSize,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -182,6 +191,7 @@ class _OpcaoCard extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final double baseFontSize;
 
   const _OpcaoCard({
     super.key,
@@ -190,13 +200,14 @@ class _OpcaoCard extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    this.baseFontSize = 18,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
@@ -215,44 +226,44 @@ class _OpcaoCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: const Color(0xFFE5EBF5),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              size: 20,
+              size: 22,
               color: const Color(0xFF4B5563),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: baseFontSize - 2,
                     fontWeight: FontWeight.w700,
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    fontSize: 11,
+                  style: TextStyle(
+                    fontSize: baseFontSize - 6,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF6B7280),
+                    color: const Color(0xFF6B7280),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -270,11 +281,13 @@ class _OpcaoCard extends StatelessWidget {
 class _OpcaoTexto extends StatelessWidget {
   final String text;
   final Color color;
+  final double fontSize;
 
   const _OpcaoTexto({
     super.key,
     required this.text,
     required this.color,
+    this.fontSize = 16,
   });
 
   @override
@@ -282,7 +295,7 @@ class _OpcaoTexto extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 13,
+        fontSize: fontSize,
         fontWeight: FontWeight.w600,
         color: color,
       ),

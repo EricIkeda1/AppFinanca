@@ -25,6 +25,8 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
   final _dataInicialController = TextEditingController(text: '01/11/2025');
   final _dataFinalController = TextEditingController(text: '30/11/2025');
 
+  static const double _baseFontSize = 18;
+
   @override
   void dispose() {
     _dataInicialController.dispose();
@@ -48,6 +50,9 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
               surface: Colors.white,
               onSurface: Colors.black,
             ),
+            textTheme: Theme.of(context)
+                .textTheme
+                .apply(fontSizeFactor: 1.1),
           ),
           child: child!,
         );
@@ -62,7 +67,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
   @override
   Widget build(BuildContext context) {
     const labelStyle = TextStyle(
-      fontSize: 13,
+      fontSize: _baseFontSize - 4, 
       fontWeight: FontWeight.w600,
       color: Colors.black87,
     );
@@ -96,7 +101,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                         'Relatório por Data',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: _baseFontSize,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -104,8 +109,11 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                     InkWell(
                       borderRadius: BorderRadius.circular(20),
                       onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                   ],
                 ),
@@ -126,12 +134,13 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                       readOnly: true,
                       style: const TextStyle(
                         color: Colors.black,
-                        fontSize: 14,
+                        fontSize: _baseFontSize - 2, 
                       ),
                       onTap: () => _selecionarData(_dataInicialController),
                       decoration: _inputDecoration(),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
+
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text('Data Final', style: labelStyle),
@@ -142,16 +151,16 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                       readOnly: true,
                       style: const TextStyle(
                         color: Colors.black,
-                        fontSize: 14,
+                        fontSize: _baseFontSize - 2,
                       ),
                       onTap: () => _selecionarData(_dataFinalController),
                       decoration: _inputDecoration(),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
 
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8F5FF),
                         borderRadius: BorderRadius.circular(12),
@@ -166,12 +175,12 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                           Text(
                             'Resumo do Período',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: _baseFontSize - 4, 
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF7B1FA2),
                             ),
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: 10),
                           _ResumoRow(
                             label: 'Total de Receitas:',
                             value: 'R\$ 5.420,00',
@@ -190,7 +199,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
 
                     Row(
                       children: [
@@ -198,8 +207,8 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                           child: OutlinedButton(
                             onPressed: () => Navigator.of(context).pop(),
                             style: OutlinedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 14),
                               side: const BorderSide(
                                 color: Color(0xFFCED4DA),
                               ),
@@ -210,6 +219,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                             child: const Text(
                               'Fechar',
                               style: TextStyle(
+                                fontSize: _baseFontSize,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
@@ -219,12 +229,11 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () {
-                            },
+                            onPressed: () {},
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFBA2FFF),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -232,6 +241,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                             child: const Text(
                               'Gerar Relatório',
                               style: TextStyle(
+                                fontSize: _baseFontSize,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
@@ -256,10 +266,10 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
       filled: true,
       fillColor: Colors.white,
       contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       hintStyle: const TextStyle(
         color: Color(0xFF9CA3AF),
-        fontSize: 14,
+        fontSize: _baseFontSize - 2, // 16
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -299,15 +309,18 @@ class _ResumoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double labelFontSize = 14;
+    const double valueFontSize = 16;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Expanded(
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: labelFontSize,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
@@ -316,7 +329,7 @@ class _ResumoRow extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: valueFontSize,
               fontWeight: FontWeight.w700,
               color: color,
             ),

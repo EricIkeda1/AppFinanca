@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class MovimentosDialog extends StatelessWidget {
   const MovimentosDialog({super.key});
 
+  static const double _baseFontSize = 18;
+
   static Future<void> show(BuildContext context) {
     return showDialog(
       context: context,
@@ -69,7 +71,7 @@ class MovimentosDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFE0E4EC), // fundo claro em vez de preto
+          color: const Color(0xFFE0E4EC),
           borderRadius: BorderRadius.circular(16),
         ),
         child: ConstrainedBox(
@@ -77,11 +79,11 @@ class MovimentosDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Cabeçalho azul
+              // Cabeçalho
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: const BoxDecoration(
                   color: Color(0xFF1565C0),
                   borderRadius:
@@ -89,12 +91,12 @@ class MovimentosDialog extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Movimentos',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: _baseFontSize + 2,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -102,8 +104,11 @@ class MovimentosDialog extends StatelessWidget {
                     InkWell(
                       borderRadius: BorderRadius.circular(20),
                       onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                   ],
                 ),
@@ -111,23 +116,23 @@ class MovimentosDialog extends StatelessWidget {
 
               // Lista + botão
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (final m in movimentos) ...[
                       _MovimentoItem(data: m),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                     ],
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1565C0),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -135,6 +140,7 @@ class MovimentosDialog extends StatelessWidget {
                         child: const Text(
                           'Fechar',
                           style: TextStyle(
+                            fontSize: _baseFontSize,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -173,6 +179,8 @@ class _MovimentoItem extends StatelessWidget {
 
   const _MovimentoItem({required this.data});
 
+  static const double _baseFontSize = 18;
+
   @override
   Widget build(BuildContext context) {
     final corIcone =
@@ -183,12 +191,12 @@ class _MovimentoItem extends StatelessWidget {
         color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(14),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: corIcone.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
@@ -196,10 +204,10 @@ class _MovimentoItem extends StatelessWidget {
             child: Icon(
               data.isReceita ? Icons.trending_up : Icons.trending_down,
               color: corIcone,
-              size: 18,
+              size: 22,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment:
@@ -208,16 +216,16 @@ class _MovimentoItem extends StatelessWidget {
                 Text(
                   data.titulo,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: _baseFontSize - 2,
                     fontWeight: FontWeight.w700,
                     color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   '${data.categoria} • ${data.data}',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: _baseFontSize - 6,
                     fontWeight: FontWeight.w600,
                     color: Colors.black54,
                   ),
@@ -225,11 +233,11 @@ class _MovimentoItem extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Text(
             data.valor,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: _baseFontSize - 2,
               fontWeight: FontWeight.w700,
               color: corIcone,
             ),

@@ -27,12 +27,13 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
   String _idioma = 'Português (Brasil)';
   String _inicioMes = 'Dia 1';
 
+  static const double _baseFontSize = 18;
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Dialog(
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -51,18 +52,17 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: const BoxDecoration(
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(18)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
                   color: Color(0xFF1E6CF9),
                 ),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Configurações',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: _baseFontSize + 2,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -73,7 +73,7 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                       child: const Icon(
                         Icons.close,
                         color: Colors.white,
-                        size: 20,
+                        size: 22,
                       ),
                     ),
                   ],
@@ -90,9 +90,10 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const _ConfigLabel(
+                    _ConfigLabel(
                       icon: Icons.attach_money,
                       text: 'Moeda',
+                      fontSize: _baseFontSize - 2,
                     ),
                     const SizedBox(height: 4),
                     _ConfigDropdown<String>(
@@ -107,12 +108,14 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                           setState(() => _moeda = v);
                         }
                       },
+                      fontSize: _baseFontSize,
                     ),
                     const SizedBox(height: 12),
 
-                    const _ConfigLabel(
+                    _ConfigLabel(
                       icon: Icons.language,
                       text: 'Idioma',
+                      fontSize: _baseFontSize - 2,
                     ),
                     const SizedBox(height: 4),
                     _ConfigDropdown<String>(
@@ -127,12 +130,14 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                           setState(() => _idioma = v);
                         }
                       },
+                      fontSize: _baseFontSize,
                     ),
                     const SizedBox(height: 12),
 
-                    const _ConfigLabel(
+                    _ConfigLabel(
                       icon: Icons.calendar_today_outlined,
                       text: 'Início do Mês',
+                      fontSize: _baseFontSize - 2,
                     ),
                     const SizedBox(height: 4),
                     _ConfigDropdown<String>(
@@ -148,6 +153,7 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                           setState(() => _inicioMes = v);
                         }
                       },
+                      fontSize: _baseFontSize,
                     ),
                     const SizedBox(height: 16),
 
@@ -162,12 +168,12 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                           width: 1,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Info: Estas configurações afetam como os dados são exibidos e calculados no aplicativo.',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: _baseFontSize - 4,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF456185),
+                          color: const Color(0xFF456185),
                         ),
                       ),
                     ),
@@ -180,7 +186,7 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                             onPressed: () => Navigator.of(context).pop(),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 12),
+                                  vertical: 14),
                               side: const BorderSide(
                                   color: Color(0xFFCED4DA)),
                               shape: RoundedRectangleBorder(
@@ -188,9 +194,10 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                               ),
                               backgroundColor: Colors.white,
                             ),
-                            child: const Text(
+                            child: Text(
                               'Cancelar',
                               style: TextStyle(
+                                fontSize: _baseFontSize,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
@@ -206,14 +213,15 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1E6CF9),
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 12),
+                                  vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Salvar',
                               style: TextStyle(
+                                fontSize: _baseFontSize,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
@@ -236,23 +244,25 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
 class _ConfigLabel extends StatelessWidget {
   final IconData icon;
   final String text;
+  final double fontSize;
 
   const _ConfigLabel({
     super.key,
     required this.icon,
     required this.text,
+    this.fontSize = 16,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF6B7280)),
+        Icon(icon, size: fontSize, color: const Color(0xFF6B7280)),
         const SizedBox(width: 6),
         Text(
           text,
-          style: const TextStyle(
-            fontSize: 13,
+          style: TextStyle(
+            fontSize: fontSize,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -266,12 +276,14 @@ class _ConfigDropdown<T> extends StatelessWidget {
   final T value;
   final List<T> items;
   final ValueChanged<T?> onChanged;
+  final double fontSize;
 
   const _ConfigDropdown({
     super.key,
     required this.value,
     required this.items,
     required this.onChanged,
+    this.fontSize = 18,
   });
 
   @override
@@ -282,9 +294,9 @@ class _ConfigDropdown<T> extends StatelessWidget {
       icon: const Icon(Icons.keyboard_arrow_down_rounded),
       dropdownColor: Colors.white,
       decoration: _dropdownDecoration(),
-      style: const TextStyle(
+      style: TextStyle(
         color: Colors.black87,
-        fontSize: 14,
+        fontSize: fontSize,
         fontWeight: FontWeight.w500,
       ),
       onChanged: onChanged,
@@ -295,6 +307,7 @@ class _ConfigDropdown<T> extends StatelessWidget {
               child: Text(
                 e.toString(),
                 overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: fontSize),
               ),
             ),
           )
@@ -306,9 +319,9 @@ class _ConfigDropdown<T> extends StatelessWidget {
     return InputDecoration(
       isDense: true,
       filled: true,
-      fillColor: Colors.white, 
+      fillColor: Colors.white,
       contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(

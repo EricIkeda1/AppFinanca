@@ -66,6 +66,8 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
 
   final _currencyFormatter = CurrencyPtBrInputFormatter(maxDigits: 12);
 
+  static const double _baseFontSize = 18;
+
   @override
   void initState() {
     super.initState();
@@ -86,7 +88,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
   Widget build(BuildContext context) {
     const textFieldStyle = TextStyle(
       color: Colors.black,
-      fontSize: 14,
+      fontSize: _baseFontSize,
     );
 
     return Dialog(
@@ -100,19 +102,20 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: const BoxDecoration(
                 color: Color(0xFFE53935),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Adicionar Despesa',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: _baseFontSize + 2,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -120,13 +123,13 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                   InkWell(
                     borderRadius: BorderRadius.circular(20),
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    child:
+                        const Icon(Icons.close, color: Colors.white, size: 22),
                   ),
                 ],
               ),
             ),
 
-            // Corpo
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
               child: Column(
@@ -152,8 +155,9 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                   TextField(
                     controller: _descricaoController,
                     style: textFieldStyle,
-                    decoration:
-                        _inputDecoration(hintText: 'Ex: Compras no mercado'),
+                    decoration: _inputDecoration(
+                      hintText: 'Ex: Compras no mercado',
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -173,24 +177,39 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                       child: DropdownButton<String>(
                         value: _categoriaSelecionada,
                         isExpanded: true,
-                        style: textFieldStyle,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: _baseFontSize,
+                        ),
                         dropdownColor: Colors.white,
                         items: const [
                           DropdownMenuItem(
                             value: 'Alimentação',
-                            child: Text('Alimentação'),
+                            child: Text(
+                              'Alimentação',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'Transporte',
-                            child: Text('Transporte'),
+                            child: Text(
+                              'Transporte',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'Moradia',
-                            child: Text('Moradia'),
+                            child: Text(
+                              'Moradia',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'Outros',
-                            child: Text('Outros'),
+                            child: Text(
+                              'Outros',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                         ],
                         onChanged: (v) {
@@ -226,6 +245,9 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                                 surface: Colors.white,
                                 onSurface: Colors.black,
                               ),
+                              textTheme: Theme.of(context)
+                                  .textTheme
+                                  .apply(fontSizeFactor: 1.2),
                             ),
                             child: child!,
                           );
@@ -245,9 +267,9 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: Color(0xFFCED4DA)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side:
+                                const BorderSide(color: Color(0xFFCED4DA)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -255,6 +277,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                           child: const Text(
                             'Cancelar',
                             style: TextStyle(
+                              fontSize: _baseFontSize,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
@@ -265,13 +288,12 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: salvar a despesa
                             Navigator.of(context).pop();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE53935),
                             padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                                const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -279,6 +301,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                           child: const Text(
                             'Adicionar',
                             style: TextStyle(
+                              fontSize: _baseFontSize,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),
@@ -302,7 +325,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 13,
+          fontSize: _baseFontSize - 2,
           color: Colors.black87,
           fontWeight: FontWeight.w600,
         ),
@@ -318,10 +341,10 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
       fillColor: Colors.white,
       hintStyle: const TextStyle(
         color: Color(0xFF9CA3AF),
-        fontSize: 14,
+        fontSize: _baseFontSize - 2,
       ),
       contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(

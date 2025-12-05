@@ -65,6 +65,8 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
 
   final _currencyFormatter = CurrencyPtBrInputFormatter(maxDigits: 12);
 
+  static const double _baseFontSize = 18;
+
   @override
   void initState() {
     super.initState();
@@ -85,7 +87,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
   Widget build(BuildContext context) {
     const textFieldStyle = TextStyle(
       color: Colors.black,
-      fontSize: 14,
+      fontSize: _baseFontSize,
     );
 
     return Dialog(
@@ -106,12 +108,12 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
               ),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Adicionar Receita',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: _baseFontSize + 2,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -119,7 +121,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                   InkWell(
                     borderRadius: BorderRadius.circular(20),
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    child: const Icon(Icons.close, color: Colors.white, size: 22),
                   ),
                 ],
               ),
@@ -171,20 +173,32 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                       child: DropdownButton<String>(
                         value: _categoriaSelecionada,
                         isExpanded: true,
-                        style: textFieldStyle,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: _baseFontSize,
+                        ),
                         dropdownColor: Colors.white,
                         items: const [
                           DropdownMenuItem(
                             value: 'Salário',
-                            child: Text('Salário'),
+                            child: Text(
+                              'Salário',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'Freelancer',
-                            child: Text('Freelancer'),
+                            child: Text(
+                              'Freelancer',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 'Outros',
-                            child: Text('Outros'),
+                            child: Text(
+                              'Outros',
+                              style: TextStyle(fontSize: _baseFontSize),
+                            ),
                           ),
                         ],
                         onChanged: (v) {
@@ -220,6 +234,9 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                                 surface: Colors.white,
                                 onSurface: Colors.black,
                               ),
+                              textTheme: Theme.of(context)
+                                  .textTheme
+                                  .apply(fontSizeFactor: 1.2),
                             ),
                             child: child!,
                           );
@@ -239,8 +256,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             side: const BorderSide(color: Color(0xFFCED4DA)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -249,6 +265,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                           child: const Text(
                             'Cancelar',
                             style: TextStyle(
+                              fontSize: _baseFontSize,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
@@ -263,8 +280,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00A86B),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -272,6 +288,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
                           child: const Text(
                             'Adicionar',
                             style: TextStyle(
+                              fontSize: _baseFontSize,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),
@@ -295,7 +312,7 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 13,
+          fontSize: _baseFontSize - 2,
           color: Colors.black87,
           fontWeight: FontWeight.w600,
         ),
@@ -311,10 +328,10 @@ class _AdicionarReceitaDialogState extends State<AdicionarReceitaDialog> {
       fillColor: Colors.white,
       hintStyle: const TextStyle(
         color: Color(0xFF9CA3AF),
-        fontSize: 14,
+        fontSize: _baseFontSize - 2,
       ),
       contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
