@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart'; 
+import 'exportar_dados.dart';
+import 'importar_dados.dart';
 
 class OpcoesDialog extends StatefulWidget {
   const OpcoesDialog({super.key});
@@ -143,20 +145,32 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       alignment: Alignment.centerLeft,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          _OpcaoTexto(
-                            text: 'Exportar Dados',
-                            color: Colors.white70,
-                            fontSize: _baseFontSize - 2,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              ExportarDadosDialog.show(context);
+                            },
+                            child: _OpcaoTexto(
+                              text: 'Exportar Dados',
+                              color:
+                                  isDark ? Colors.white70 : Colors.black87,
+                              fontSize: _baseFontSize - 2,
+                            ),
                           ),
-                          SizedBox(height: 10),
-                          _OpcaoTexto(
-                            text: 'Importar Dados',
-                            color: Colors.white70,
-                            fontSize: _baseFontSize - 2,
+                          const SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: () {
+                              ImportarDadosDialog.show(context);
+                            },
+                            child: _OpcaoTexto(
+                              text: 'Importar Dados',
+                              color:
+                                  isDark ? Colors.white70 : Colors.black87,
+                              fontSize: _baseFontSize - 2,
+                            ),
                           ),
-                          SizedBox(height: 10),
-                          _OpcaoTexto(
+                          const SizedBox(height: 10),
+                          const _OpcaoTexto(
                             text: 'Limpar Todos os Dados',
                             color: Color(0xFFE53935),
                             fontSize: _baseFontSize - 2,

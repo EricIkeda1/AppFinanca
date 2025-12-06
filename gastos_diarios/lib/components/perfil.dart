@@ -76,6 +76,58 @@ class _PerfilDialogState extends State<PerfilDialog> {
     });
   }
 
+  void _abrirPlanosDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: isDark ? const Color(0xFF020617) : Colors.white,
+          title: Text(
+            'Plano do app',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Plano atual: $_plano',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Em breve você poderá contratar planos pagos diretamente pelo app.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _confirmarDelecaoConta() async {
     final textController = TextEditingController();
 
@@ -185,10 +237,6 @@ class _PerfilDialogState extends State<PerfilDialog> {
     );
 
     if (confirmar == true) {
-      // TODO: lógica real de deletar conta + logout + navegação
-      // Exemplo:
-      // await AuthService.instance.deleteAccount();
-      // Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
     }
   }
 
@@ -364,32 +412,52 @@ class _PerfilDialogState extends State<PerfilDialog> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: _editando ? null : () {},
+                            onPressed: _editando ? null : _abrirPlanosDialog,
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(
                                 color: isDark
-                                    ? const Color(0xFF374151)
-                                    : const Color(0xFFCBD5E1),
+                                    ? const Color(0xFF38BDF8)
+                                    : const Color(0xFF60A5FA),
                               ),
                               padding: const EdgeInsets.symmetric(
                                   vertical: 12),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
+                              backgroundColor: isDark
+                                  ? const Color(0xFF020617)
+                                  : Colors.white,
                             ),
-                            child: Text(
-                              'Alterar senha',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: _editando
-                                    ? (isDark
-                                        ? Colors.white38
-                                        : Colors.black38)
-                                    : (isDark
-                                        ? Colors.white
-                                        : const Color(0xFF111827)),
-                              ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.workspace_premium_outlined,
+                                  size: 18,
+                                  color: _editando
+                                      ? (isDark
+                                          ? Colors.white38
+                                          : Colors.black38)
+                                      : (isDark
+                                          ? const Color(0xFF38BDF8)
+                                          : const Color(0xFF1D4ED8)),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Plano do app',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: _editando
+                                        ? (isDark
+                                            ? Colors.white38
+                                            : Colors.black38)
+                                        : (isDark
+                                            ? Colors.white
+                                            : const Color(0xFF111827)),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -589,9 +657,9 @@ class _CampoEditavel extends StatelessWidget {
                     : const Color(0xFFE5E7EB),
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(
                 color: Color(0xFF38BDF8),
                 width: 1.5,
               ),
