@@ -4,7 +4,7 @@ import '../components/adicionar_despesa.dart';
 import '../components/movimentos.dart';
 import '../components/relatorio.dart';
 import '../components/operacao_automatica.dart';
-import '../components/perfil.dart';
+import '../components/perfil.dart'; 
 import '../components/configuracoes.dart';
 import '../components/opcoes.dart';
 import '../login/login.dart';
@@ -152,10 +152,7 @@ class _DashboardAppBar extends StatelessWidget {
 
     switch (selected) {
       case 'perfil':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PerfilPage()),
-        );
+        await PerfilDialog.show(context); 
         break;
 
       case 'config':
