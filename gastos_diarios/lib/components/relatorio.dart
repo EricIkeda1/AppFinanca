@@ -42,17 +42,24 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       builder: (context, child) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF8E24AA),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-            textTheme: Theme.of(context)
-                .textTheme
-                .apply(fontSizeFactor: 1.1),
+          data: theme.copyWith(
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: Color(0xFF8E24AA),
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF020617),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: Color(0xFF8E24AA),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black,
+                  ),
           ),
           child: child!,
         );
@@ -66,10 +73,13 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const labelStyle = TextStyle(
-      fontSize: _baseFontSize - 4, 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final labelStyle = TextStyle(
+      fontSize: _baseFontSize - 4,
       fontWeight: FontWeight.w600,
-      color: Colors.black87,
+      color: isDark ? Colors.white70 : Colors.black87,
     );
 
     return Dialog(
@@ -77,7 +87,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF020617) : Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
         child: ConstrainedBox(
@@ -124,7 +134,7 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Align(
+                    Align(
                       alignment: Alignment.centerLeft,
                       child: Text('Data Inicial', style: labelStyle),
                     ),
@@ -132,16 +142,16 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                     TextField(
                       controller: _dataInicialController,
                       readOnly: true,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: _baseFontSize - 2, 
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: _baseFontSize - 2,
                       ),
                       onTap: () => _selecionarData(_dataInicialController),
-                      decoration: _inputDecoration(),
+                      decoration: _inputDecoration(context),
                     ),
                     const SizedBox(height: 14),
 
-                    const Align(
+                    Align(
                       alignment: Alignment.centerLeft,
                       child: Text('Data Final', style: labelStyle),
                     ),
@@ -149,12 +159,12 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                     TextField(
                       controller: _dataFinalController,
                       readOnly: true,
-                      style: const TextStyle(
-                        color: Colors.black,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
                         fontSize: _baseFontSize - 2,
                       ),
                       onTap: () => _selecionarData(_dataFinalController),
-                      decoration: _inputDecoration(),
+                      decoration: _inputDecoration(context),
                     ),
                     const SizedBox(height: 20),
 
@@ -162,36 +172,40 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8F5FF),
+                        color: isDark
+                            ? const Color(0xFF140B24)
+                            : const Color(0xFFF8F5FF),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFFE0D7FF),
+                          color: isDark
+                              ? const Color(0xFF3B2A60)
+                              : const Color(0xFFE0D7FF),
                           width: 1,
                         ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             'Resumo do Período',
                             style: TextStyle(
-                              fontSize: _baseFontSize - 4, 
+                              fontSize: _baseFontSize - 4,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF7B1FA2),
+                              color: const Color(0xFF7B1FA2),
                             ),
                           ),
-                          SizedBox(height: 10),
-                          _ResumoRow(
+                          const SizedBox(height: 10),
+                          const _ResumoRow(
                             label: 'Total de Receitas:',
                             value: 'R\$ 5.420,00',
                             color: Color(0xFF00A86B),
                           ),
-                          _ResumoRow(
+                          const _ResumoRow(
                             label: 'Total de Despesas:',
                             value: 'R\$ 3.180,50',
                             color: Color(0xFFE53935),
                           ),
-                          _ResumoRow(
+                          const _ResumoRow(
                             label: 'Saldo:',
                             value: 'R\$ 2.239,50',
                             color: Color(0xFF1565C0),
@@ -209,19 +223,23 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 14),
-                              side: const BorderSide(
-                                color: Color(0xFFCED4DA),
+                              side: BorderSide(
+                                color: isDark
+                                    ? const Color(0xFF4B5563)
+                                    : const Color(0xFFCED4DA),
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Fechar',
                               style: TextStyle(
                                 fontSize: _baseFontSize,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: isDark
+                                    ? Colors.white
+                                    : Colors.black87,
                               ),
                             ),
                           ),
@@ -260,34 +278,37 @@ class _RelatorioDialogState extends State<RelatorioDialog> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return InputDecoration(
       isDense: true,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: isDark ? const Color(0xFF020617) : Colors.white,
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      hintStyle: const TextStyle(
-        color: Color(0xFF9CA3AF),
-        fontSize: _baseFontSize - 2, // 16
+      hintStyle: TextStyle(
+        color: const Color(0xFF9CA3AF),
+        fontSize: _baseFontSize - 2,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color(0xFFCBD5E1),
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color(0xFFCBD5E1),
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+        borderSide: BorderSide(
           color: Color(0xFF8E24AA),
           width: 1.4,
         ),
@@ -311,6 +332,7 @@ class _ResumoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     const double labelFontSize = 14;
     const double valueFontSize = 16;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -319,10 +341,10 @@ class _ResumoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: labelFontSize,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: isDark ? Colors.white70 : Colors.black87,
               ),
             ),
           ),

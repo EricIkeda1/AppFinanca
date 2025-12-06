@@ -21,6 +21,9 @@ class MovimentosDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final movimentos = [
       _MovimentoData(
         titulo: 'Salário Novembro',
@@ -71,7 +74,7 @@ class MovimentosDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFE0E4EC),
+          color: isDark ? const Color(0xFF020617) : const Color(0xFFE0E4EC),
           borderRadius: BorderRadius.circular(16),
         ),
         child: ConstrainedBox(
@@ -86,8 +89,7 @@ class MovimentosDialog extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: const BoxDecoration(
                   color: Color(0xFF1565C0),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: Row(
                   children: [
@@ -183,12 +185,17 @@ class _MovimentoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final corIcone =
         data.isReceita ? const Color(0xFF00A86B) : const Color(0xFFE53935);
 
+    final cardColor =
+        isDark ? const Color(0xFF0B1120) : const Color(0xFFF3F4F6);
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -215,19 +222,19 @@ class _MovimentoItem extends StatelessWidget {
               children: [
                 Text(
                   data.titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: _baseFontSize - 2,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${data.categoria} • ${data.data}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: _baseFontSize - 6,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black54,
+                    color: isDark ? Colors.white70 : Colors.black54,
                   ),
                 ),
               ],

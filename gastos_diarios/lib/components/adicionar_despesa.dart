@@ -86,13 +86,16 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const textFieldStyle = TextStyle(
-      color: Colors.black,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final textFieldStyle = TextStyle(
+      color: isDark ? Colors.white : Colors.black,
       fontSize: _baseFontSize,
     );
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.cardColor,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ConstrainedBox(
@@ -104,9 +107,10 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
               width: double.infinity,
               padding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: const BoxDecoration(
-                color: Color(0xFFE53935),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: Row(
                 children: [
@@ -135,7 +139,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _label('Valor'),
+                  _label('Valor', isDark),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _valorController,
@@ -146,30 +150,36 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                       FilteringTextInputFormatter.digitsOnly,
                       _currencyFormatter,
                     ],
-                    decoration: _inputDecoration(hintText: 'R\$ 0,00'),
+                    decoration: _inputDecoration(
+                      context,
+                      hintText: 'R\$ 0,00',
+                    ),
                   ),
                   const SizedBox(height: 12),
 
-                  _label('Descrição'),
+                  _label('Descrição', isDark),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _descricaoController,
                     style: textFieldStyle,
                     decoration: _inputDecoration(
+                      context,
                       hintText: 'Ex: Compras no mercado',
                     ),
                   ),
                   const SizedBox(height: 12),
 
-                  _label('Categoria'),
+                  _label('Categoria', isDark),
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? const Color(0xFF020617) : Colors.white,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: const Color(0xFFCBD5E1),
+                        color: isDark
+                            ? const Color(0xFF4B5563)
+                            : const Color(0xFFCBD5E1),
                         width: 1,
                       ),
                     ),
@@ -177,11 +187,12 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                       child: DropdownButton<String>(
                         value: _categoriaSelecionada,
                         isExpanded: true,
-                        style: const TextStyle(
-                          color: Colors.black,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
                           fontSize: _baseFontSize,
                         ),
-                        dropdownColor: Colors.white,
+                        dropdownColor:
+                            isDark ? const Color(0xFF020617) : Colors.white,
                         items: const [
                           DropdownMenuItem(
                             value: 'Alimentação',
@@ -222,13 +233,16 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                   ),
                   const SizedBox(height: 12),
 
-                  _label('Data'),
+                  _label('Data', isDark),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _dataController,
                     readOnly: true,
                     style: textFieldStyle,
-                    decoration: _inputDecoration(hintText: 'DD/MM/AAAA'),
+                    decoration: _inputDecoration(
+                      context,
+                      hintText: 'DD/MM/AAAA',
+                    ),
                     onTap: () async {
                       final hoje = DateTime.now();
                       final escolhida = await showDatePicker(
@@ -237,17 +251,24 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                         firstDate: DateTime(2000),
                         lastDate: DateTime(2100),
                         builder: (context, child) {
+                          final theme = Theme.of(context);
+                          final isDark =
+                              theme.brightness == Brightness.dark;
                           return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: const ColorScheme.light(
-                                primary: Color(0xFFE53935),
-                                onPrimary: Colors.white,
-                                surface: Colors.white,
-                                onSurface: Colors.black,
-                              ),
-                              textTheme: Theme.of(context)
-                                  .textTheme
-                                  .apply(fontSizeFactor: 1.2),
+                            data: theme.copyWith(
+                              colorScheme: isDark
+                                  ? const ColorScheme.dark(
+                                      primary: Color(0xFFE53935),
+                                      onPrimary: Colors.white,
+                                      surface: Color(0xFF020617),
+                                      onSurface: Colors.white,
+                                    )
+                                  : const ColorScheme.light(
+                                      primary: Color(0xFFE53935),
+                                      onPrimary: Colors.white,
+                                      surface: Colors.white,
+                                      onSurface: Colors.black,
+                                    ),
                             ),
                             child: child!,
                           );
@@ -267,19 +288,25 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side:
-                                const BorderSide(color: Color(0xFFCED4DA)),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(
+                              color: isDark
+                                  ? const Color(0xFF4B5563)
+                                  : const Color(0xFFCED4DA),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Cancelar',
                             style: TextStyle(
                               fontSize: _baseFontSize,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: isDark
+                                  ? Colors.white
+                                  : Colors.black87,
                             ),
                           ),
                         ),
@@ -319,49 +346,52 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
     );
   }
 
-  Widget _label(String text) {
+  Widget _label(String text, bool isDark) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: _baseFontSize - 2,
-          color: Colors.black87,
+          color: isDark ? Colors.white70 : Colors.black87,
           fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
-  InputDecoration _inputDecoration({String? hintText}) {
+  InputDecoration _inputDecoration(BuildContext context, {String? hintText}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return InputDecoration(
       hintText: hintText,
       isDense: true,
       filled: true,
-      fillColor: Colors.white,
-      hintStyle: const TextStyle(
-        color: Color(0xFF9CA3AF),
+      fillColor: isDark ? const Color(0xFF020617) : Colors.white,
+      hintStyle: TextStyle(
+        color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF9CA3AF),
         fontSize: _baseFontSize - 2,
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(
-          color: Color(0xFFCBD5E1),
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(
-          color: Color(0xFFCBD5E1),
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(6)),
+        borderSide: BorderSide(
           color: Color(0xFFE53935),
           width: 1.4,
         ),

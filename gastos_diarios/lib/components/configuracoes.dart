@@ -31,6 +31,9 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Center(
       child: Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -41,7 +44,7 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
         child: Container(
           width: 430,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF020617) : theme.cardColor,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
@@ -82,7 +85,9 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
 
               Container(
                 height: 1,
-                color: const Color(0xFFE5E9F0),
+                color: isDark
+                    ? const Color(0xFF1F2937)
+                    : const Color(0xFFE5E9F0),
               ),
 
               Padding(
@@ -161,10 +166,14 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8F1FF),
+                        color: isDark
+                            ? const Color(0xFF0B1220)
+                            : const Color(0xFFE8F1FF),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFD0E0FF),
+                          color: isDark
+                              ? const Color(0xFF1D3A70)
+                              : const Color(0xFFD0E0FF),
                           width: 1,
                         ),
                       ),
@@ -173,7 +182,9 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                         style: TextStyle(
                           fontSize: _baseFontSize - 4,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF456185),
+                          color: isDark
+                              ? const Color(0xFF9FB4DD)
+                              : const Color(0xFF456185),
                         ),
                       ),
                     ),
@@ -187,19 +198,25 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 14),
-                              side: const BorderSide(
-                                  color: Color(0xFFCED4DA)),
+                              side: BorderSide(
+                                color: isDark
+                                    ? const Color(0xFF4B5563)
+                                    : const Color(0xFFCED4DA),
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              backgroundColor: Colors.white,
+                              backgroundColor:
+                                  isDark ? const Color(0xFF020617) : Colors.white,
                             ),
                             child: Text(
                               'Cancelar',
                               style: TextStyle(
                                 fontSize: _baseFontSize,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: isDark
+                                    ? Colors.white
+                                    : Colors.black87,
                               ),
                             ),
                           ),
@@ -218,7 +235,7 @@ class _ConfiguracoesDialogState extends State<ConfiguracoesDialog> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Salvar',
                               style: TextStyle(
                                 fontSize: _baseFontSize,
@@ -255,16 +272,22 @@ class _ConfigLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
-        Icon(icon, size: fontSize, color: const Color(0xFF6B7280)),
+        Icon(
+          icon,
+          size: fontSize,
+          color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280),
+        ),
         const SizedBox(width: 6),
         Text(
           text,
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
       ],
@@ -288,14 +311,17 @@ class _ConfigDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return DropdownButtonFormField<T>(
       value: value,
       isExpanded: true,
       icon: const Icon(Icons.keyboard_arrow_down_rounded),
-      dropdownColor: Colors.white,
-      decoration: _dropdownDecoration(),
+      dropdownColor: isDark ? const Color(0xFF020617) : Colors.white,
+      decoration: _dropdownDecoration(context),
       style: TextStyle(
-        color: Colors.black87,
+        color: isDark ? Colors.white : Colors.black87,
         fontSize: fontSize,
         fontWeight: FontWeight.w500,
       ),
@@ -315,30 +341,34 @@ class _ConfigDropdown<T> extends StatelessWidget {
     );
   }
 
-  InputDecoration _dropdownDecoration() {
+  InputDecoration _dropdownDecoration(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InputDecoration(
       isDense: true,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: isDark ? const Color(0xFF020617) : Colors.white,
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color(0xFFCCD3E0),
+        borderSide: BorderSide(
+          color:
+              isDark ? const Color(0xFF4B5563) : const Color(0xFFCCD3E0),
           width: 1,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color(0xFFCCD3E0),
+        borderSide: BorderSide(
+          color:
+              isDark ? const Color(0xFF4B5563) : const Color(0xFFCCD3E0),
           width: 1,
         ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+        borderSide: BorderSide(
           color: Color(0xFF1E6CF9),
           width: 1.4,
         ),

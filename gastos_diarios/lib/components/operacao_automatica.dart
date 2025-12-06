@@ -19,6 +19,9 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final operacoes = [
       _OperacaoData(
         titulo: 'Salário Mensal',
@@ -45,7 +48,7 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF020617) : Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
         child: ConstrainedBox(
@@ -132,19 +135,25 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1),
+                        color: isDark
+                            ? const Color(0xFF2B1B00)
+                            : const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFFFECB3),
+                          color: isDark
+                              ? const Color(0xFF5D3A00)
+                              : const Color(0xFFFFECB3),
                           width: 1,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Dica: As operações automáticas serão adicionadas automaticamente no dia especificado de cada mês.',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF8D6E63),
+                          color: isDark
+                              ? const Color(0xFFFFF3C4)
+                              : const Color(0xFF8D6E63),
                         ),
                       ),
                     ),
@@ -190,6 +199,9 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final isDark = theme.brightness == Brightness.dark;
+
         return MediaQuery.removeViewInsets(
           context: dialogContext,
           removeBottom: true,
@@ -203,9 +215,9 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
             ),
             child: Container(
               width: 440,
-              height: 460, 
+              height: 460,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF020617) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -253,58 +265,32 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Descrição',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
+                          _label('Descrição', isDark),
                           const SizedBox(height: 4),
                           TextField(
                             controller: tituloController,
-                            style: const TextStyle(color: Colors.black),
-                            decoration: _novaOpInputDecoration(
-                              'Ex: Salário Mensal',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
                             ),
+                            decoration:
+                                _novaOpInputDecoration(dialogContext, 'Ex: Salário Mensal'),
                           ),
                           const SizedBox(height: 10),
 
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Dia do mês',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
+                          _label('Dia do mês', isDark),
                           const SizedBox(height: 4),
                           TextField(
                             controller: diaController,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: Colors.black),
-                            decoration: _novaOpInputDecoration('1 a 31'),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                            decoration:
+                                _novaOpInputDecoration(dialogContext, '1 a 31'),
                           ),
                           const SizedBox(height: 10),
 
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Valor',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
+                          _label('Valor', isDark),
                           const SizedBox(height: 4),
                           TextField(
                             controller: valorController,
@@ -312,28 +298,25 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                                 const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            style: const TextStyle(color: Colors.black),
-                            decoration: _novaOpInputDecoration('R\$ 0,00'),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                            decoration:
+                                _novaOpInputDecoration(dialogContext, 'R\$ 0,00'),
                           ),
                           const SizedBox(height: 10),
 
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Tipo',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
+                          _label('Tipo', isDark),
                           const SizedBox(height: 4),
                           DropdownButtonFormField<String>(
                             value: tipoSelecionado,
-                            dropdownColor: Colors.white,
-                            style: const TextStyle(color: Colors.black),
-                            decoration: _novaOpInputDecoration(null),
+                            dropdownColor:
+                                isDark ? const Color(0xFF020617) : Colors.white,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                            decoration:
+                                _novaOpInputDecoration(dialogContext, null),
                             items: const [
                               DropdownMenuItem(
                                 value: 'Receita',
@@ -362,18 +345,22 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
                                     ),
-                                    side: const BorderSide(
-                                      color: Color(0xFFCED4DA),
+                                    side: BorderSide(
+                                      color: isDark
+                                          ? const Color(0xFF4B5563)
+                                          : const Color(0xFFCED4DA),
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     'Cancelar',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
                                     ),
                                   ),
                                 ),
@@ -416,39 +403,56 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
       },
     );
   }
+
+  Widget _label(String text, bool isDark) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white70 : Colors.black87,
+        ),
+      ),
+    );
+  }
 }
 
-InputDecoration _novaOpInputDecoration(String? hint) {
+InputDecoration _novaOpInputDecoration(BuildContext context, String? hint) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+
   return InputDecoration(
     hintText: hint,
     isDense: true,
     filled: true,
-    fillColor: const Color(0xFFF8FAFF),
+    fillColor: isDark ? const Color(0xFF020617) : const Color(0xFFF8FAFF),
     contentPadding: const EdgeInsets.symmetric(
       horizontal: 12,
       vertical: 10,
     ),
-    hintStyle: const TextStyle(
-      color: Color(0xFF9CA3AF),
+    hintStyle: TextStyle(
+      color: const Color(0xFF9CA3AF),
       fontSize: 14,
     ),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(
-        color: Color(0xFFCBD5E1),
+      borderSide: BorderSide(
+        color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
         width: 1,
       ),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(
-        color: Color(0xFFCBD5E1),
+      borderSide: BorderSide(
+        color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
         width: 1,
       ),
     ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(
+    focusedBorder: const OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(8)),
+      borderSide: BorderSide(
         color: Color(0xFFD79706),
         width: 1.4,
       ),
@@ -477,12 +481,17 @@ class _OperacaoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final corValor =
         data.isReceita ? const Color(0xFF00A86B) : const Color(0xFFE53935);
 
+    final cardColor =
+        isDark ? const Color(0xFF0B1120) : const Color(0xFFF8F5FF);
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F5FF),
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -494,19 +503,19 @@ class _OperacaoItem extends StatelessWidget {
               children: [
                 Text(
                   data.titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   data.descricao,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black54,
+                    color: isDark ? Colors.white70 : Colors.black54,
                   ),
                 ),
               ],
@@ -523,12 +532,11 @@ class _OperacaoItem extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () {
-            },
-            icon: const Icon(
+            onPressed: () {},
+            icon: Icon(
               Icons.delete_outline,
               size: 20,
-              color: Color(0xFFE53935),
+              color: const Color(0xFFE53935),
             ),
           ),
         ],
