@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../main.dart';
 
 class OpcoesDialog extends StatefulWidget {
   const OpcoesDialog({super.key});
@@ -23,7 +25,6 @@ class OpcoesDialog extends StatefulWidget {
 }
 
 class _OpcoesDialogState extends State<OpcoesDialog> {
-  bool _modoEscuro = false;
   bool _notificacoes = true;
   bool _backupAutomatico = true;
 
@@ -31,10 +32,14 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final bool _modoEscuro = themeProvider.isDarkMode;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Center(
       child: Dialog(
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
@@ -42,7 +47,9 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
         child: Container(
           width: 430,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark
+                ? const Color(0xFF020617) 
+                : theme.cardColor,      
             borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
@@ -52,14 +59,16 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                 width: double.infinity,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(18)),
-                  color: Color(0xFF3F4A5A),
+                      const BorderRadius.vertical(top: Radius.circular(18)),
+                  color: isDark
+                      ? const Color(0xFF111827) 
+                      : const Color(0xFF3F4A5A), 
                 ),
                 child: Row(
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: Text(
                         'Opções',
                         style: TextStyle(
@@ -93,7 +102,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       subtitle: 'Ativar tema escuro',
                       value: _modoEscuro,
                       onChanged: (v) {
-                        setState(() => _modoEscuro = v);
+                        themeProvider.toggleTheme(v);
                       },
                       baseFontSize: _baseFontSize,
                     ),
@@ -121,27 +130,32 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                     ),
 
                     const SizedBox(height: 18),
-                    const Divider(height: 1, color: Color(0xFFE5E9F0)),
+                    Divider(
+                      height: 1,
+                      color: isDark
+                          ? const Color(0xFF1F2937)
+                          : const Color(0xFFE5E9F0),
+                    ),
                     const SizedBox(height: 16),
 
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           _OpcaoTexto(
                             text: 'Exportar Dados',
-                            color: Colors.black87,
+                            color: isDark ? Colors.white70 : Colors.black87,
                             fontSize: _baseFontSize - 2,
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           _OpcaoTexto(
                             text: 'Importar Dados',
-                            color: Colors.black87,
+                            color: isDark ? Colors.white70 : Colors.black87,
                             fontSize: _baseFontSize - 2,
                           ),
-                          SizedBox(height: 10),
-                          _OpcaoTexto(
+                          const SizedBox(height: 10),
+                          const _OpcaoTexto(
                             text: 'Limpar Todos os Dados',
                             color: Color(0xFFE53935),
                             fontSize: _baseFontSize - 2,
@@ -157,9 +171,11 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3F4A5A),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14),
+                          backgroundColor: isDark
+                              ? const Color(0xFF111827) 
+                              : const Color(0xFF3F4A5A),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -205,14 +221,19 @@ class _OpcaoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: isDark
+            ? const Color(0xFF020617) 
+            : const Color(0xFFF9FAFB), 
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFE5E7EB),
+          color: isDark
+              ? const Color(0xFF1F2937) 
+              : const Color(0xFFE5E7EB), 
           width: 1,
         ),
         boxShadow: [
@@ -229,13 +250,17 @@ class _OpcaoCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFE5EBF5),
+              color: isDark
+                  ? const Color(0xFF111827) 
+                  : const Color(0xFFE5EBF5), 
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
               size: 22,
-              color: const Color(0xFF4B5563),
+              color: isDark
+                  ? const Color(0xFF38BDF8) 
+                  : const Color(0xFF4B5563), 
             ),
           ),
           const SizedBox(width: 14),
@@ -248,7 +273,7 @@ class _OpcaoCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: baseFontSize - 2,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -268,7 +293,9 @@ class _OpcaoCard extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeColor: Colors.white,
-            activeTrackColor: const Color(0xFF111827),
+            activeTrackColor: isDark
+                ? const Color(0xFF38BDF8) 
+                : const Color(0xFF111827), 
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: const Color(0xFFD1D5DB),
           ),

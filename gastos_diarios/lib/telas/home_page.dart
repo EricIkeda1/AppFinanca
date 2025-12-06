@@ -4,7 +4,7 @@ import '../components/adicionar_despesa.dart';
 import '../components/movimentos.dart';
 import '../components/relatorio.dart';
 import '../components/operacao_automatica.dart';
-import '../components/perfil.dart'; 
+import '../components/perfil.dart';
 import '../components/configuracoes.dart';
 import '../components/opcoes.dart';
 import '../login/login.dart';
@@ -14,19 +14,20 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E4EC),
+      backgroundColor: theme.scaffoldBackgroundColor,
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
+      body: const SafeArea(
         child: CustomScrollView(
           slivers: [
-            const SliverToBoxAdapter(child: _DashboardAppBar()),
+            SliverToBoxAdapter(child: _DashboardAppBar()),
             SliverToBoxAdapter(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: Column(
-                  children: const [
+                  children: [
                     _SummaryCard(
                       title: 'Receitas',
                       amount: 'R\$ 5.420,00',
@@ -82,6 +83,9 @@ class _DashboardAppBar extends StatelessWidget {
         blockPosition.dx + blockSize.width / 2 - menuWidth / 2;
     final double top = blockPosition.dy + blockSize.height + 6;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -92,20 +96,24 @@ class _DashboardAppBar extends StatelessWidget {
       ),
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: Colors.white,
+      color: isDark ? const Color(0xFF020617) : Colors.white,
       items: [
         PopupMenuItem<String>(
           value: 'perfil',
           child: Row(
-            children: const [
-              Icon(Icons.person_outline, size: 18, color: Color(0xFF455A64)),
-              SizedBox(width: 8),
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 18,
+                color: isDark ? Colors.white70 : const Color(0xFF455A64),
+              ),
+              const SizedBox(width: 8),
               Text(
                 'Meu Perfil',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
             ],
@@ -114,16 +122,19 @@ class _DashboardAppBar extends StatelessWidget {
         PopupMenuItem<String>(
           value: 'config',
           child: Row(
-            children: const [
-              Icon(Icons.settings_outlined,
-                  size: 18, color: Color(0xFF455A64)),
-              SizedBox(width: 8),
+            children: [
+              Icon(
+                Icons.settings_outlined,
+                size: 18,
+                color: isDark ? Colors.white70 : const Color(0xFF455A64),
+              ),
+              const SizedBox(width: 8),
               Text(
                 'Configurações',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
             ],
@@ -152,13 +163,11 @@ class _DashboardAppBar extends StatelessWidget {
 
     switch (selected) {
       case 'perfil':
-        await PerfilDialog.show(context); 
+        await PerfilDialog.show(context);
         break;
-
       case 'config':
         ConfiguracoesDialog.show(context);
         break;
-
       case 'sair':
         Navigator.pushAndRemoveUntil(
           context,
@@ -166,7 +175,6 @@ class _DashboardAppBar extends StatelessWidget {
           (Route<dynamic> route) => false,
         );
         break;
-
       default:
         break;
     }
@@ -174,65 +182,78 @@ class _DashboardAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFE0E4EC),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFF00C853),
-            ),
-            alignment: Alignment.center,
-            child:
-                const Icon(Icons.attach_money, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Gerenciar',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: Colors.black,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      elevation: 8,
+      shadowColor: Colors.black.withOpacity(isDark ? 0.7 : 0.15),
+      child: Container(
+        color: isDark ? const Color(0xFF020617) : const Color(0xFFE0E4EC),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color:
+                    isDark ? const Color(0xFF38BDF8) : const Color(0xFF00C853),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.attach_money,
+                color: Colors.white,
+                size: 22,
               ),
             ),
-          ),
-          GestureDetector(
-            key: _profileBlockKey,
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _showProfileMenu(context),
-            child: Row(
-              children: [
-                const Text(
-                  'Olá, João Silva',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Gerenciar',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFB0BEC5),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 20,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            GestureDetector(
+              key: _profileBlockKey,
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showProfileMenu(context),
+              child: Row(
+                children: [
+                  Text(
+                    'Olá, João Silva',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? const Color(0xFF1F2937)
+                          : const Color(0xFFB0BEC5),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -257,13 +278,16 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withOpacity(isDark ? 0.6 : 0.12),
             blurRadius: 24,
             spreadRadius: 1,
             offset: const Offset(0, 10),
@@ -280,10 +304,10 @@ class _SummaryCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -298,10 +322,10 @@ class _SummaryCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black54,
+                      color: isDark ? Colors.white60 : Colors.black54,
                     ),
                   ),
                 ],
@@ -504,10 +528,13 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Material(
-      color: Colors.white,
+      color: theme.cardColor,
       elevation: 6,
-      shadowColor: Colors.black.withOpacity(0.12),
+      shadowColor: Colors.black.withOpacity(isDark ? 0.6 : 0.12),
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -536,10 +563,10 @@ class _ActionCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.visible,
                   softWrap: true,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
               ),
@@ -556,13 +583,16 @@ class _LastTransactionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(isDark ? 0.6 : 0.1),
             blurRadius: 24,
             spreadRadius: 2,
             offset: const Offset(0, 12),
@@ -575,45 +605,67 @@ class _LastTransactionsCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  'Últimas Transações',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black26,
-                  ),
-                ),
+                _LastTransactionsTitle(),
               ],
             ),
             SizedBox(height: 20),
-            Column(
-              children: [
-                _EmptyTransactionsIcon(),
-                SizedBox(height: 12),
-                Text(
-                  'Nenhuma transação registrada',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Comece adicionando uma receita ou despesa',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black54,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+            _LastTransactionsEmpty(),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _LastTransactionsTitle extends StatelessWidget {
+  const _LastTransactionsTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Text(
+      'Últimas Transações',
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+        color: isDark ? Colors.white38 : Colors.black26,
+      ),
+    );
+  }
+}
+
+class _LastTransactionsEmpty extends StatelessWidget {
+  const _LastTransactionsEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        const _EmptyTransactionsIcon(),
+        const SizedBox(height: 12),
+        Text(
+          'Nenhuma transação registrada',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Comece adicionando uma receita ou despesa',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }
@@ -623,17 +675,19 @@ class _EmptyTransactionsIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: const Color(0xFFE3EBFF),
+        color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE3EBFF),
         borderRadius: BorderRadius.circular(28),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.table_rows_rounded,
         size: 24,
-        color: Color(0xFF455A64),
+        color: isDark ? Colors.white70 : const Color(0xFF455A64),
       ),
     );
   }
