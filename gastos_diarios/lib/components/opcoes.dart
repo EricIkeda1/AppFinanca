@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../main.dart'; 
+import '../main.dart';
 import 'exportar_dados.dart';
 import 'importar_dados.dart';
+import 'limpar_dados.dart';
 
 class OpcoesDialog extends StatefulWidget {
   const OpcoesDialog({super.key});
@@ -50,9 +51,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
         child: Container(
           width: 430,
           decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF020617)
-                : theme.cardColor,
+            color: isDark ? const Color(0xFF020617) : theme.cardColor,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
@@ -170,10 +169,31 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const _OpcaoTexto(
-                            text: 'Limpar Todos os Dados',
-                            color: Color(0xFFE53935),
-                            fontSize: _baseFontSize - 2,
+
+                          GestureDetector(
+                            onTap: () async {
+                              final result =
+                                  await showDialog<Map<String, bool>>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => const LimparDadosDialog(),
+                              );
+
+                              if (result == null) return;
+
+                              final limparReceitas =
+                                  result['receitas'] ?? false;
+                              final limparDespesas =
+                                  result['despesas'] ?? false;
+                              final limparOperacoes =
+                                  result['operacoesAuto'] ?? false;
+
+                            },
+                            child: const _OpcaoTexto(
+                              text: 'Limpar Todos os Dados',
+                              color: Color(0xFFE53935),
+                              fontSize: _baseFontSize - 2,
+                            ),
                           ),
                         ],
                       ),
@@ -241,14 +261,11 @@ class _OpcaoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF020617)
-            : const Color(0xFFF9FAFB),
+        color: isDark ? const Color(0xFF020617) : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF1F2937)
-              : const Color(0xFFE5E7EB),
+          color:
+              isDark ? const Color(0xFF1F2937) : const Color(0xFFE5E7EB),
           width: 1,
         ),
         boxShadow: [
@@ -331,8 +348,6 @@ class _OpcaoTexto extends StatelessWidget {
     required this.color,
     this.fontSize = 16,
   });
-
-  static const double _baseFontSize = 18;
 
   @override
   Widget build(BuildContext context) {
