@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   String _getUserDisplayName() {
-    final user = supabase.auth.currentUser; 
+    final user = supabase.auth.currentUser;
     if (user == null) return 'usuário';
 
     final meta = user.userMetadata ?? {};
@@ -55,38 +55,202 @@ class HomePage extends StatelessWidget {
   }
 }
 
+class DashboardSummary {
+  final double receitasMes;
+  final double despesasMes;
+  final double saldo;
+  final double variacaoReceitas;
+  final double variacaoDespesas; 
+
+  DashboardSummary({
+    required this.receitasMes,
+    required this.despesasMes,
+    required this.saldo,
+    required this.variacaoReceitas,
+    required this.variacaoDespesas,
+  });
+}
+
+Future<DashboardSummary> fetchDashboardSummary() async {
+  final user = supabase.auth.currentUser;
+  if (user == null) {
+    return DashboardSummary(
+      receitasMes: 0,
+      despesasMes: 0,
+      saldo: 0,
+      variacaoReceitas: 0,
+      variacaoDespesas: 0,
+    );
+  }
+
+  final now = DateTime.now();
+  final inicioMesAtual = DateTime(now.year, now.month, 1);
+  final inicioProxMes = DateTime(now.year, now.month + 1, 1);
+  final inicioMesAnterior = DateTime(now.year, now.month - 1, 1);
+
+  final resAtual = await supabase
+      .from('movimentos')
+      .select('tipo, valor')
+      .eq('usuario_id', user.id)
+      .gte('data', inicioMesAtual.toIso8601String())
+      .lt('data', inicioProxMes.toIso8601String()) as List<dynamic>;
+
+  final resAnterior = await supabase
+      .from('movimentos')
+      .select('tipo, valor')
+      .eq('usuario_id', user.id)
+      .gte('data', inicioMesAnterior.toIso8601String())
+      .lt('data', inicioMesAtual.toIso8601String()) as List<dynamic>;
+
+  double recAtual = 0;
+  double despAtual = 0;
+  for (final row in resAtual) {
+    final map = row as Map<String, dynamic>;
+    final tipo = map['tipo'] as String;
+    final valor = (map['valor'] as num).toDouble();
+    if (tipo == 'receita') {
+      recAtual += valor;
+    } else if (tipo == 'despesa') {
+      despAtual += valor;
+    }
+  }
+
+  double recAnt = 0;
+  double despAnt = 0;
+  for (final row in resAnterior) {
+    final map = row as Map<String, dynamic>;
+    final tipo = map['tipo'] as String;
+    final valor = (map['valor'] as num).toDouble();
+    if (tipo == 'receita') {
+      recAnt += valor;
+    } else if (tipo == 'despesa') {
+      despAnt += valor;
+    }
+  }
+
+  double varRec = 0;
+  if (recAnt > 0) {
+    varRec = ((recAtual - recAnt) / recAnt) * 100;
+  }
+  double varDesp = 0;
+  if (despAnt > 0) {
+    varDesp = ((despAtual - despAnt) / despAnt) * 100;
+  }
+
+  final saldo = recAtual - despAtual;
+
+  return DashboardSummary(
+    receitasMes: recAtual,
+    despesasMes: despAtual,
+    saldo: saldo,
+    variacaoReceitas: varRec,
+    variacaoDespesas: varDesp,
+  );
+}
+
+class Movimento {
+  final String id;
+  final String tipo; 
+  final double valor;
+  final String descricao;
+  final DateTime data;
+
+  Movimento({
+    required this.id,
+    required this.tipo,
+    required this.valor,
+    required this.descricao,
+    required this.data,
+  });
+}
+
+Future<List<Movimento>> fetchUltimosMovimentos({int limit = 5}) async {
+  final user = supabase.auth.currentUser;
+  if (user == null) return [];
+
+  final res = await supabase
+      .from('movimentos')
+      .select('id, tipo, valor, descricao, data')
+      .eq('usuario_id', user.id)
+      .order('data', ascending: false)
+      .limit(limit) as List<dynamic>;
+
+  return res
+      .map((row) {
+        final map = row as Map<String, dynamic>;
+        return Movimento(
+          id: map['id'] as String,
+          tipo: map['tipo'] as String,
+          valor: (map['valor'] as num).toDouble(),
+          descricao: (map['descricao'] as String?) ?? '',
+          data: DateTime.parse(map['data'] as String),
+        );
+      })
+      .toList();
+}
+
 class _HomeBody extends StatelessWidget {
   const _HomeBody();
 
+  String _formatCurrency(double value) {
+    return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+  }
+
+  String _formatVariation(double v) {
+    final sinal = v >= 0 ? '+' : '';
+    return '$sinal${v.toStringAsFixed(1)}% vs mês anterior';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        _SummaryCard(
-          title: 'Receitas',
-          amount: 'R\$ 5.420,00',
-          subtitle: '+12,5% vs mês anterior',
-          amountColor: Color(0xFF00A86B),
-          iconBg: Color(0xFFE5F8EE),
-          icon: Icons.trending_up,
-        ),
-        SizedBox(height: 6),
-        _SummaryCard(
-          title: 'Despesas',
-          amount: 'R\$ 3.180,50',
-          subtitle: '+8,3% vs mês anterior',
-          amountColor: Color(0xFFE53935),
-          iconBg: Color(0xFFFDECEC),
-          icon: Icons.trending_down,
-        ),
-        SizedBox(height: 8),
-        _BalanceCard(),
-        SizedBox(height: 12),
-        _ActionsGrid(),
-        SizedBox(height: 16),
-        _LastTransactionsCard(),
-        SizedBox(height: 14),
-      ],
+    return FutureBuilder<DashboardSummary>(
+      future: fetchDashboardSummary(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.only(top: 40),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final data = snapshot.data ??
+            DashboardSummary(
+              receitasMes: 0,
+              despesasMes: 0,
+              saldo: 0,
+              variacaoReceitas: 0,
+              variacaoDespesas: 0,
+            );
+
+        return Column(
+          children: [
+            _SummaryCard(
+              title: 'Receitas',
+              amount: _formatCurrency(data.receitasMes),
+              subtitle: _formatVariation(data.variacaoReceitas),
+              amountColor: const Color(0xFF00A86B),
+              iconBg: const Color(0xFFE5F8EE),
+              icon: Icons.trending_up,
+            ),
+            const SizedBox(height: 6),
+            _SummaryCard(
+              title: 'Despesas',
+              amount: _formatCurrency(data.despesasMes),
+              subtitle: _formatVariation(data.variacaoDespesas),
+              amountColor: const Color(0xFFE53935),
+              iconBg: const Color(0xFFFDECEC),
+              icon: Icons.trending_down,
+            ),
+            const SizedBox(height: 8),
+            _BalanceCard(saldo: data.saldo),
+            const SizedBox(height: 12),
+            const _ActionsGrid(),
+            const SizedBox(height: 16),
+            const _LastTransactionsCard(),
+            const SizedBox(height: 14),
+          ],
+        );
+      },
     );
   }
 }
@@ -199,7 +363,7 @@ class _DashboardAppBar extends StatelessWidget {
         ConfiguracoesDialog.show(context);
         break;
       case 'sair':
-        await supabase.auth.signOut(); 
+        await supabase.auth.signOut();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -380,7 +544,12 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  const _BalanceCard();
+  final double saldo;
+
+  const _BalanceCard({required this.saldo});
+
+  String _formatCurrency(double v) =>
+      'R\$ ${v.toStringAsFixed(2).replaceAll('.', ',')}';
 
   @override
   Widget build(BuildContext context) {
@@ -404,9 +573,7 @@ class _BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          const Expanded(
-            child: _BalanceText(),
-          ),
+          _BalanceText(textSaldo: _formatCurrency(saldo)),
           Container(
             width: 34,
             height: 34,
@@ -427,40 +594,44 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _BalanceText extends StatelessWidget {
-  const _BalanceText();
+  final String textSaldo;
+
+  const _BalanceText({required this.textSaldo});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text(
-          'Saldo',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Saldo',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          'R\$ 2.239,50',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
+          const SizedBox(height: 4),
+          Text(
+            textSaldo,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          'Disponível no mês',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          const SizedBox(height: 4),
+          const Text(
+            'Disponível no mês',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -613,38 +784,136 @@ class _ActionCard extends StatelessWidget {
 class _LastTransactionsCard extends StatelessWidget {
   const _LastTransactionsCard();
 
+  String _formatCurrency(double v) =>
+      'R\$ ${v.toStringAsFixed(2).replaceAll('.', ',')}';
+
+  String _formatDate(DateTime d) {
+    final dia = d.day.toString().padLeft(2, '0');
+    final mes = d.month.toString().padLeft(2, '0');
+    return '$dia/$mes';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.6 : 0.1),
-            blurRadius: 24,
-            spreadRadius: 2,
-            offset: const Offset(0, 12),
+    return FutureBuilder<List<Movimento>>(
+      future: fetchUltimosMovimentos(),
+      builder: (context, snapshot) {
+        final lista = snapshot.data ?? [];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.6 : 0.1),
+                blurRadius: 24,
+                spreadRadius: 2,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: const Padding(
-        padding: EdgeInsets.all(18),
-        child: Column(
-          children: [
-            Row(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
               children: [
-                _LastTransactionsTitle(),
+                const Row(
+                  children: [
+                    _LastTransactionsTitle(),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  const Center(child: CircularProgressIndicator())
+                else if (lista.isEmpty)
+                  const _LastTransactionsEmpty()
+                else
+                  Column(
+                    children: lista
+                        .map(
+                          (m) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: m.tipo == 'receita'
+                                        ? const Color(0xFFE5F8EE)
+                                        : const Color(0xFFFDECEC),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    m.tipo == 'receita'
+                                        ? Icons.trending_up
+                                        : Icons.trending_down,
+                                    size: 18,
+                                    color: m.tipo == 'receita'
+                                        ? const Color(0xFF00A86B)
+                                        : const Color(0xFFE53935),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        m.descricao.isEmpty
+                                            ? (m.tipo == 'receita'
+                                                ? 'Receita'
+                                                : 'Despesa')
+                                            : m.descricao,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatDate(m.data),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark
+                                              ? Colors.white60
+                                              : Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  (m.tipo == 'despesa' ? '-' : '') +
+                                      _formatCurrency(m.valor),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: m.tipo == 'receita'
+                                        ? const Color(0xFF00A86B)
+                                        : const Color(0xFFE53935),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
               ],
             ),
-            SizedBox(height: 20),
-            _LastTransactionsEmpty(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class AdicionarDespesaDialog extends StatefulWidget {
   const AdicionarDespesaDialog({super.key});
@@ -67,6 +70,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
   final _currencyFormatter = CurrencyPtBrInputFormatter(maxDigits: 12);
 
   static const double _baseFontSize = 18;
+  bool _salvando = false;
 
   @override
   void initState() {
@@ -82,6 +86,74 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
     _descricaoController.dispose();
     _dataController.dispose();
     super.dispose();
+  }
+
+  DateTime? _parseDataBr(String text) {
+    try {
+      final partes = text.split('/');
+      if (partes.length != 3) return null;
+      final dia = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+      final ano = int.parse(partes[2]);
+      return DateTime(ano, mes, dia);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  double? _parseValor() {
+    if (_valorController.text.isEmpty) return null;
+    final semSimbolo = _valorController.text.replaceAll('R\$', '').trim();
+    final semPontos = semSimbolo.replaceAll('.', '').replaceAll(' ', '');
+    final comPonto = semPontos.replaceAll(',', '.');
+    return double.tryParse(comPonto);
+  }
+
+  Future<void> _salvarDespesa() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário não autenticado.')),
+      );
+      return;
+    }
+
+    final valor = _parseValor();
+    if (valor == null || valor <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe um valor válido.')),
+      );
+      return;
+    }
+
+    final descricao = _descricaoController.text.trim();
+    final data = _parseDataBr(_dataController.text) ?? DateTime.now();
+
+    setState(() => _salvando = true);
+
+    try {
+      await supabase.from('movimentos').insert({
+        'usuario_id': user.id,
+        'tipo': 'despesa',
+        'valor': valor,
+        'descricao': descricao.isEmpty ? null : descricao,
+        // sem campo 'categoria' no banco
+        'data': data.toIso8601String(),
+      }); // [web:324][web:110]
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Despesa adicionada com sucesso.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar despesa: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
   }
 
   @override
@@ -105,12 +177,10 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
           children: [
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE53935),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE53935),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               ),
               child: Row(
                 children: [
@@ -133,7 +203,6 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
               child: Column(
@@ -156,7 +225,6 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   _label('Descrição', isDark),
                   const SizedBox(height: 4),
                   TextField(
@@ -168,7 +236,6 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   _label('Categoria', isDark),
                   const SizedBox(height: 4),
                   Container(
@@ -232,7 +299,6 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   _label('Data', isDark),
                   const SizedBox(height: 4),
                   TextField(
@@ -281,15 +347,14 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                     },
                   ),
                   const SizedBox(height: 18),
-
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed:
+                              _salvando ? null : () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(
                               color: isDark
                                   ? const Color(0xFF4B5563)
@@ -304,9 +369,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                             style: TextStyle(
                               fontSize: _baseFontSize,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? Colors.white
-                                  : Colors.black87,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                         ),
@@ -314,25 +377,31 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
+                          onPressed: _salvando ? null : _salvarDespesa,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE53935),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
-                          child: const Text(
-                            'Adicionar',
-                            style: TextStyle(
-                              fontSize: _baseFontSize,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: _salvando
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Adicionar',
+                                  style: TextStyle(
+                                    fontSize: _baseFontSize,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -370,7 +439,7 @@ class _AdicionarDespesaDialogState extends State<AdicionarDespesaDialog> {
       filled: true,
       fillColor: isDark ? const Color(0xFF020617) : Colors.white,
       hintStyle: TextStyle(
-        color: isDark ? const Color(0xFF9CA3AF) : const Color(0xFF9CA3AF),
+        color: const Color(0xFF9CA3AF),
         fontSize: _baseFontSize - 2,
       ),
       contentPadding:
