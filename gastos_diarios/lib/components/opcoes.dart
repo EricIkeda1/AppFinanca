@@ -36,7 +36,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final bool _modoEscuro = themeProvider.isDarkMode;
+    final modoEscuro = themeProvider.isDarkMode;
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -59,14 +59,10 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
             children: [
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: BoxDecoration(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(18)),
-                  color: isDark
-                      ? const Color(0xFF111827)
-                      : const Color(0xFF3F4A5A),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                  color: isDark ? const Color(0xFF111827) : const Color(0xFF3F4A5A),
                 ),
                 child: Row(
                   children: [
@@ -92,7 +88,6 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                   ],
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
                 child: Column(
@@ -102,10 +97,8 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       icon: Icons.brightness_5_outlined,
                       title: 'Modo Escuro',
                       subtitle: 'Ativar tema escuro',
-                      value: _modoEscuro,
-                      onChanged: (v) {
-                        themeProvider.toggleTheme(v);
-                      },
+                      value: modoEscuro,
+                      onChanged: (v) => themeProvider.toggleTheme(v),
                       baseFontSize: _baseFontSize,
                     ),
                     const SizedBox(height: 12),
@@ -114,9 +107,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       title: 'Notificações',
                       subtitle: 'Receber alertas',
                       value: _notificacoes,
-                      onChanged: (v) {
-                        setState(() => _notificacoes = v);
-                      },
+                      onChanged: (v) => setState(() => _notificacoes = v),
                       baseFontSize: _baseFontSize,
                     ),
                     const SizedBox(height: 12),
@@ -125,18 +116,19 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                       title: 'Backup Automático',
                       subtitle: 'Salvar dados diariamente',
                       value: _backupAutomatico,
-                      onChanged: (v) {
-                        setState(() => _backupAutomatico = v);
-                      },
+                      onChanged: (v) => setState(() => _backupAutomatico = v),
                       baseFontSize: _baseFontSize,
                     ),
-
+                    const SizedBox(height: 12),
+                    _FontSizeCard(
+                      baseFontSize: _baseFontSize,
+                      value: themeProvider.fontScale,
+                      onChanged: (v) => themeProvider.setFontScale(v),
+                    ),
                     const SizedBox(height: 18),
                     Divider(
                       height: 1,
-                      color: isDark
-                          ? const Color(0xFF1F2937)
-                          : const Color(0xFFE5E9F0),
+                      color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE5E9F0),
                     ),
                     const SizedBox(height: 16),
 
@@ -146,48 +138,40 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              ExportarDadosDialog.show(context);
-                            },
+                            onTap: () => ExportarDadosDialog.show(context),
                             child: _OpcaoTexto(
                               text: 'Exportar Dados',
-                              color:
-                                  isDark ? Colors.white70 : Colors.black87,
+                              color: isDark ? Colors.white70 : Colors.black87,
                               fontSize: _baseFontSize - 2,
                             ),
                           ),
                           const SizedBox(height: 10),
                           GestureDetector(
-                            onTap: () {
-                              ImportarDadosDialog.show(context);
-                            },
+                            onTap: () => ImportarDadosDialog.show(context),
                             child: _OpcaoTexto(
                               text: 'Importar Dados',
-                              color:
-                                  isDark ? Colors.white70 : Colors.black87,
+                              color: isDark ? Colors.white70 : Colors.black87,
                               fontSize: _baseFontSize - 2,
                             ),
                           ),
                           const SizedBox(height: 10),
-
                           GestureDetector(
                             onTap: () async {
-                              final result =
-                                  await showDialog<Map<String, bool>>(
+                              final result = await showDialog<Map<String, bool>>(
                                 context: context,
                                 barrierDismissible: false,
-                                builder: (_) => const LimparDadosDialog(),
+                                builder: (_) => LimparDadosDialog(), // sem const
                               );
 
                               if (result == null) return;
 
-                              final limparReceitas =
-                                  result['receitas'] ?? false;
-                              final limparDespesas =
-                                  result['despesas'] ?? false;
-                              final limparOperacoes =
-                                  result['operacoesAuto'] ?? false;
+                              final limparReceitas = result['receitas'] ?? false;
+                              final limparDespesas = result['despesas'] ?? false;
+                              final limparOperacoes = result['operacoesAuto'] ?? false;
 
+                              (limparReceitas);
+                              (limparDespesas);
+                              (limparOperacoes);
                             },
                             child: const _OpcaoTexto(
                               text: 'Limpar Todos os Dados',
@@ -200,7 +184,6 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                     ),
 
                     const SizedBox(height: 20),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -209,8 +192,7 @@ class _OpcoesDialogState extends State<OpcoesDialog> {
                           backgroundColor: isDark
                               ? const Color(0xFF111827)
                               : const Color(0xFF3F4A5A),
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -256,7 +238,7 @@ class _OpcaoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -264,8 +246,7 @@ class _OpcaoCard extends StatelessWidget {
         color: isDark ? const Color(0xFF020617) : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color:
-              isDark ? const Color(0xFF1F2937) : const Color(0xFFE5E7EB),
+          color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE5E7EB),
           width: 1,
         ),
         boxShadow: [
@@ -282,17 +263,13 @@ class _OpcaoCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF111827)
-                  : const Color(0xFFE5EBF5),
+              color: isDark ? const Color(0xFF111827) : const Color(0xFFE5EBF5),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
               size: 22,
-              color: isDark
-                  ? const Color(0xFF38BDF8)
-                  : const Color(0xFF4B5563),
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF4B5563),
             ),
           ),
           const SizedBox(width: 14),
@@ -311,10 +288,10 @@ class _OpcaoCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: baseFontSize - 6,
+                  style: const TextStyle(
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF6B7280),
+                    color: Color(0xFF6B7280),
                   ),
                 ),
               ],
@@ -325,11 +302,110 @@ class _OpcaoCard extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeColor: Colors.white,
-            activeTrackColor: isDark
-                ? const Color(0xFF38BDF8)
-                : const Color(0xFF111827),
+            activeTrackColor:
+                isDark ? const Color(0xFF38BDF8) : const Color(0xFF111827),
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: const Color(0xFFD1D5DB),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FontSizeCard extends StatelessWidget {
+  final double baseFontSize;
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  const _FontSizeCard({
+    required this.baseFontSize,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF020617) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE5E7EB),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF111827) : const Color(0xFFE5EBF5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.format_size,
+                  size: 22,
+                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF4B5563),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tamanho da fonte',
+                      style: TextStyle(
+                        fontSize: baseFontSize - 2,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Ajusta o texto do app',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${(value * 100).round()}%',
+                style: TextStyle(
+                  fontSize: baseFontSize - 6,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Slider(
+            value: value.clamp(0.8, 1.6),
+            min: 0.8,
+            max: 1.6,
+            divisions: 8,
+            onChanged: onChanged,
           ),
         ],
       ),

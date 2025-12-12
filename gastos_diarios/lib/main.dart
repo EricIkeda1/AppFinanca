@@ -2,18 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'telas/home_page.dart';
 import 'login/login.dart';
 
 class ThemeProvider extends ChangeNotifier {
+  static const _kFontScaleKey = 'font_scale';
+
   ThemeMode _themeMode = ThemeMode.light;
+  double _fontScale = 1.0;
+  bool _loaded = false;
 
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
+  double get fontScale => _fontScale;
+  bool get loaded => _loaded;
+
   void toggleTheme(bool isOn) {
     _themeMode = isOn ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+
+  Future<void> loadLocalFontScale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final v = prefs.getDouble(_kFontScaleKey) ?? 1.0;
+    _fontScale = v.clamp(0.8, 1.6);
+    _loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> setFontScale(double v) async {
+    final clamped = v.clamp(0.8, 1.6);
+    _fontScale = clamped;
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_kFontScaleKey, clamped);
+  }
+
+  Future<void> clearLocalFontScale() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kFontScaleKey);
+    _fontScale = 1.0;
     notifyListeners();
   }
 }
@@ -27,10 +58,7 @@ Future<void> main() async {
   final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
   if (supabaseUrl == null || supabaseAnonKey == null) {
-    throw Exception(
-      'SUPABASE_URL ou SUPABASE_ANON_KEY não encontrados no .env. '
-      'Verifique o arquivo .env na raiz do projeto.',
-    );
+    throw Exception('SUPABASE_URL / SUPABASE_ANON_KEY ausentes no .env');
   }
 
   await Supabase.initialize(
@@ -46,8 +74,21 @@ Future<void> main() async {
   );
 }
 
-class GastosDiariosApp extends StatelessWidget {
+class GastosDiariosApp extends StatefulWidget {
   const GastosDiariosApp({super.key});
+
+  @override
+  State<GastosDiariosApp> createState() => _GastosDiariosAppState();
+}
+
+class _GastosDiariosAppState extends State<GastosDiariosApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ThemeProvider>().loadLocalFontScale();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,48 +119,30 @@ class GastosDiariosApp extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeProvider.themeMode,
-      home: const _AuthGate(), 
+      home: const _AuthGate(),
+
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(themeProvider.fontScale),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }
 
-class _AuthGate extends StatefulWidget {
+class _AuthGate extends StatelessWidget {
   const _AuthGate({super.key});
 
   @override
-  State<_AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<_AuthGate> {
-  @override
-  void initState() {
-    super.initState();
-    _redirect();
-  }
-
-  Future<void> _redirect() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    if (!mounted) return;
-
+  Widget build(BuildContext context) {
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
+      return const HomePage();
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const LoginPage();
   }
 }

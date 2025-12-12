@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class OperacoesAutomaticasDialog extends StatelessWidget {
+class OperacoesAutomaticasDialog extends StatefulWidget {
   const OperacoesAutomaticasDialog({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -18,30 +19,74 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
   }
 
   @override
+  State<OperacoesAutomaticasDialog> createState() =>
+      _OperacoesAutomaticasDialogState();
+}
+
+class _OperacoesAutomaticasDialogState
+    extends State<OperacoesAutomaticasDialog> {
+  final _supabase = Supabase.instance.client;
+
+  bool _loading = false;
+  String? _error;
+  List<_OperacaoAuto> _ops = const [];
+
+  User? get _user => _supabase.auth.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarOps();
+    });
+  }
+
+  Future<void> _carregarOps() async {
+    final user = _user;
+    if (user == null) {
+      setState(() => _error = 'Usuário não autenticado.');
+      return;
+    }
+
+    try {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+
+      final rows = await _supabase
+          .from('operacoes_automaticas')
+          .select('id, titulo, tipo, valor, dia_do_mes, ativa')
+          .eq('user_id', user.id)
+          .order('dia_do_mes', ascending: true);
+
+      final list = (rows as List).cast<Map<String, dynamic>>();
+
+      setState(() {
+        _ops = list.map(_OperacaoAuto.fromMap).toList();
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  Future<void> _deletar(String id) async {
+    try {
+      await _supabase.from('operacoes_automaticas').delete().eq('id', id);
+      await _carregarOps();
+    } catch (e) {
+      setState(() => _error = e.toString());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    final operacoes = [
-      _OperacaoData(
-        titulo: 'Salário Mensal',
-        descricao: 'Todo dia 1 • Receita',
-        valor: 'R\$ 5.000,00',
-        isReceita: true,
-      ),
-      _OperacaoData(
-        titulo: 'Aluguel',
-        descricao: 'Todo dia 5 • Despesa',
-        valor: 'R\$ 1.200,00',
-        isReceita: false,
-      ),
-      _OperacaoData(
-        titulo: 'Internet',
-        descricao: 'Todo dia 10 • Despesa',
-        valor: 'R\$ 99,90',
-        isReceita: false,
-      ),
-    ];
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -56,41 +101,10 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFCC8B00),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Operações Automáticas',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
+              _DialogHeader(
+                title: 'Operações Automáticas',
+                color: const Color(0xFFCC8B00),
+                onClose: () => Navigator.of(context).pop(),
               ),
 
               Padding(
@@ -101,9 +115,7 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          _mostrarNovaOperacaoDialog(context);
-                        },
+                        onPressed: () => _mostrarNovaOperacaoDialog(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD79706),
                           foregroundColor: Colors.white,
@@ -125,10 +137,45 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    for (final op in operacoes) ...[
-                      _OperacaoItem(data: op),
-                      const SizedBox(height: 8),
+                    if (_error != null) ...[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                     ],
+
+                    if (_loading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: CircularProgressIndicator(),
+                      )
+                    else if (_ops.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'Nenhuma operação automática cadastrada.',
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else
+                      for (final op in _ops) ...[
+                        _OperacaoItem(
+                          data: op,
+                          onDelete: () => _deletar(op.id),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
                     const SizedBox(height: 10),
 
                     Container(
@@ -147,7 +194,7 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Dica: As operações automáticas serão adicionadas automaticamente no dia especificado de cada mês.',
+                        'Dica: O banco roda um job diário (cron) e lança automaticamente no dia configurado.',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -206,196 +253,193 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
           context: dialogContext,
           removeBottom: true,
           child: Dialog(
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 24,
-            ),
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Container(
-              width: 440,
-              height: 460,
-              decoration: BoxDecoration(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 440,
+                maxHeight: 520,
+              ),
+              child: Material(
                 color: isDark ? const Color(0xFF020617) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _DialogHeader(
+                      title: 'Nova Operação Automática',
+                      color: const Color(0xFFD79706),
+                      onClose: () => Navigator.of(dialogContext).pop(),
                     ),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFD79706),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Nova Operação Automática',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: () => Navigator.of(dialogContext).pop(),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _label('Descrição', isDark),
-                          const SizedBox(height: 4),
-                          TextField(
-                            controller: tituloController,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                            decoration:
-                                _novaOpInputDecoration(dialogContext, 'Ex: Salário Mensal'),
-                          ),
-                          const SizedBox(height: 10),
-
-                          _label('Dia do mês', isDark),
-                          const SizedBox(height: 4),
-                          TextField(
-                            controller: diaController,
-                            keyboardType: TextInputType.number,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                            decoration:
-                                _novaOpInputDecoration(dialogContext, '1 a 31'),
-                          ),
-                          const SizedBox(height: 10),
-
-                          _label('Valor', isDark),
-                          const SizedBox(height: 4),
-                          TextField(
-                            controller: valorController,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                            decoration:
-                                _novaOpInputDecoration(dialogContext, 'R\$ 0,00'),
-                          ),
-                          const SizedBox(height: 10),
-
-                          _label('Tipo', isDark),
-                          const SizedBox(height: 4),
-                          DropdownButtonFormField<String>(
-                            value: tipoSelecionado,
-                            dropdownColor:
-                                isDark ? const Color(0xFF020617) : Colors.white,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                            decoration:
-                                _novaOpInputDecoration(dialogContext, null),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'Receita',
-                                child: Text('Receita'),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _label('Descrição', isDark),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: tituloController,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
                               ),
-                              DropdownMenuItem(
-                                value: 'Despesa',
-                                child: Text('Despesa'),
+                              decoration: _novaOpInputDecoration(
+                                dialogContext,
+                                'Ex: Salário Mensal',
                               ),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                tipoSelecionado = v;
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 18),
+                            ),
+                            const SizedBox(height: 12),
 
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () =>
-                                      Navigator.of(dialogContext).pop(),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                            _label('Dia do mês', isDark),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: diaController,
+                              keyboardType: TextInputType.number,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                              decoration:
+                                  _novaOpInputDecoration(dialogContext, '1 a 31'),
+                            ),
+                            const SizedBox(height: 12),
+
+                            _label('Valor', isDark),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: valorController,
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                              decoration: _novaOpInputDecoration(
+                                dialogContext,
+                                'Ex: 1200.50',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            _label('Tipo', isDark),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              value: tipoSelecionado,
+                              isExpanded: true,
+                              dropdownColor:
+                                  isDark ? const Color(0xFF020617) : Colors.white,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                              decoration:
+                                  _novaOpInputDecoration(dialogContext, null),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Receita',
+                                  child: Text('Receita'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Despesa',
+                                  child: Text('Despesa'),
+                                ),
+                              ],
+                              onChanged: (v) {
+                                if (v != null) tipoSelecionado = v;
+                              },
+                            ),
+                            const SizedBox(height: 18),
+
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
                                     ),
-                                    side: BorderSide(
-                                      color: isDark
-                                          ? const Color(0xFF4B5563)
-                                          : const Color(0xFFCED4DA),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
+                                    child: const Text('Cancelar'),
                                   ),
-                                  child: Text(
-                                    'Cancelar',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark
-                                          ? Colors.white
-                                          : Colors.black87,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFD79706),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      final user = _user;
+                                      if (user == null) return;
+
+                                      final titulo = tituloController.text.trim();
+                                      final dia =
+                                          int.tryParse(diaController.text.trim());
+                                      final valor = double.tryParse(
+                                        valorController.text
+                                            .trim()
+                                            .replaceAll(',', '.'),
+                                      );
+
+                                      if (titulo.isEmpty ||
+                                          dia == null ||
+                                          dia < 1 ||
+                                          dia > 31 ||
+                                          valor == null) {
+                                        return;
+                                      }
+
+                                      final tipo = (tipoSelecionado == 'Receita')
+                                          ? 'receita'
+                                          : 'despesa';
+
+                                      await _supabase
+                                          .from('operacoes_automaticas')
+                                          .insert({
+                                        'user_id': user.id,
+                                        'titulo': titulo,
+                                        'tipo': tipo,
+                                        'valor': valor,
+                                        'dia_do_mes': dia,
+                                        'ativa': true,
+                                      });
+
+                                      if (mounted) {
+                                        Navigator.of(dialogContext).pop();
+                                      }
+                                      await _carregarOps();
+                                    },
+                                    child: const Text(
+                                      'Salvar',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(dialogContext).pop();
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFD79706),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Salvar',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -419,6 +463,49 @@ class OperacoesAutomaticasDialog extends StatelessWidget {
   }
 }
 
+class _DialogHeader extends StatelessWidget {
+  final String title;
+  final Color color;
+  final VoidCallback onClose;
+
+  const _DialogHeader({
+    required this.title,
+    required this.color,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: onClose,
+            child: const Icon(Icons.close, color: Colors.white, size: 20),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 InputDecoration _novaOpInputDecoration(BuildContext context, String? hint) {
   final theme = Theme.of(context);
   final isDark = theme.brightness == Brightness.dark;
@@ -428,21 +515,8 @@ InputDecoration _novaOpInputDecoration(BuildContext context, String? hint) {
     isDense: true,
     filled: true,
     fillColor: isDark ? const Color(0xFF020617) : const Color(0xFFF8FAFF),
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: 12,
-      vertical: 10,
-    ),
-    hintStyle: TextStyle(
-      color: const Color(0xFF9CA3AF),
-      fontSize: 14,
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(
-        color: isDark ? const Color(0xFF4B5563) : const Color(0xFFCBD5E1),
-        width: 1,
-      ),
-    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(
@@ -452,32 +526,53 @@ InputDecoration _novaOpInputDecoration(BuildContext context, String? hint) {
     ),
     focusedBorder: const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(8)),
-      borderSide: BorderSide(
-        color: Color(0xFFD79706),
-        width: 1.4,
-      ),
+      borderSide: BorderSide(color: Color(0xFFD79706), width: 1.4),
     ),
   );
 }
 
-class _OperacaoData {
+class _OperacaoAuto {
+  final String id;
   final String titulo;
-  final String descricao;
-  final String valor;
-  final bool isReceita;
+  final String tipo; 
+  final double valor;
+  final int diaDoMes;
+  final bool ativa;
 
-  _OperacaoData({
+  _OperacaoAuto({
+    required this.id,
     required this.titulo,
-    required this.descricao,
+    required this.tipo,
     required this.valor,
-    required this.isReceita,
+    required this.diaDoMes,
+    required this.ativa,
   });
+
+  bool get isReceita => tipo == 'receita';
+
+  String get descricaoUi =>
+      'Todo dia $diaDoMes • ${isReceita ? 'Receita' : 'Despesa'}';
+
+  String get valorUi => _money(valor);
+
+  static _OperacaoAuto fromMap(Map<String, dynamic> m) => _OperacaoAuto(
+        id: m['id'].toString(),
+        titulo: (m['titulo'] ?? '').toString(),
+        tipo: (m['tipo'] ?? '').toString(),
+        valor: (m['valor'] as num).toDouble(),
+        diaDoMes: (m['dia_do_mes'] as num).toInt(),
+        ativa: (m['ativa'] ?? true) as bool,
+      );
 }
 
 class _OperacaoItem extends StatelessWidget {
-  final _OperacaoData data;
+  final _OperacaoAuto data;
+  final VoidCallback onDelete;
 
-  const _OperacaoItem({required this.data});
+  const _OperacaoItem({
+    required this.data,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -486,8 +581,7 @@ class _OperacaoItem extends StatelessWidget {
     final corValor =
         data.isReceita ? const Color(0xFF00A86B) : const Color(0xFFE53935);
 
-    final cardColor =
-        isDark ? const Color(0xFF0B1120) : const Color(0xFFF8F5FF);
+    final cardColor = isDark ? const Color(0xFF0B1120) : const Color(0xFFF8F5FF);
 
     return Container(
       decoration: BoxDecoration(
@@ -511,7 +605,7 @@ class _OperacaoItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  data.descricao,
+                  data.descricaoUi,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -523,7 +617,7 @@ class _OperacaoItem extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            data.valor,
+            data.valorUi,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -532,15 +626,32 @@ class _OperacaoItem extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () {},
-            icon: Icon(
+            onPressed: onDelete,
+            icon: const Icon(
               Icons.delete_outline,
               size: 20,
-              color: const Color(0xFFE53935),
+              color: Color(0xFFE53935),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+String _money(double v) {
+  final sign = v < 0 ? '-' : '';
+  final abs = v.abs();
+  final fixed = abs.toStringAsFixed(2);
+  final parts = fixed.split('.');
+  final inteiro = parts[0];
+  final dec = parts[1];
+
+  final buf = StringBuffer();
+  for (int i = 0; i < inteiro.length; i++) {
+    final posFromEnd = inteiro.length - i;
+    buf.write(inteiro[i]);
+    if (posFromEnd > 1 && posFromEnd % 3 == 1) buf.write('.');
+  }
+  return '${sign}R\$ ${buf.toString()},$dec';
 }
