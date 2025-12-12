@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../login/login.dart';
+
+final supabase = Supabase.instance.client;
 
 class PerfilDialog extends StatefulWidget {
   const PerfilDialog({super.key});
@@ -27,9 +31,9 @@ class PerfilDialog extends StatefulWidget {
 class _PerfilDialogState extends State<PerfilDialog> {
   static const double _baseFontSize = 18;
 
-  String _nome = 'João Silva';
-  String _email = 'joao@email.com';
-  String _telefone = '(43) 99999-9999';
+  String _nome = '';
+  String _email = '';
+  String _telefone = '';
   String _plano = 'Gratuito';
 
   late final TextEditingController _nomeController;
@@ -39,19 +43,54 @@ class _PerfilDialogState extends State<PerfilDialog> {
   late final MaskTextInputFormatter _telefoneMask;
 
   bool _editando = false;
+  bool _carregando = true;
 
   @override
   void initState() {
     super.initState();
-    _nomeController = TextEditingController(text: _nome);
-    _emailController = TextEditingController(text: _email);
-    _telefoneController = TextEditingController(text: _telefone);
+    _nomeController = TextEditingController();
+    _emailController = TextEditingController();
+    _telefoneController = TextEditingController();
 
     _telefoneMask = MaskTextInputFormatter(
       mask: '(##) #####-####',
       filter: {'#': RegExp(r'[0-9]')},
-      initialText: _telefone,
     );
+
+    _carregarUsuario();
+  }
+
+  Future<void> _carregarUsuario() async {
+    final user = supabase.auth.currentUser; 
+
+    if (user == null) {
+      setState(() {
+        _nome = 'Usuário';
+        _email = '';
+        _telefone = '';
+        _carregando = false;
+      });
+      return;
+    }
+
+    final meta = user.userMetadata ?? {};
+    final nome = (meta['nome'] as String?) ?? '';
+    final telefone = (meta['telefone'] as String?) ?? '';
+    final planoMeta = (meta['plano'] as String?) ?? 'Gratuito';
+
+    _nome = nome.isNotEmpty ? nome : (user.email ?? 'Usuário');
+    _email = user.email ?? '';
+    _telefone = telefone;
+    _plano = planoMeta;
+
+    _nomeController.text = _nome;
+    _emailController.text = _email;
+    _telefoneMask.updateMask(mask: '(##) #####-####');
+    _telefoneController.text = _telefoneMask.maskText(_telefone);
+
+    setState(() {
+      _carregando = false;
+    });
   }
 
   @override
@@ -66,14 +105,65 @@ class _PerfilDialogState extends State<PerfilDialog> {
     setState(() => _editando = true);
   }
 
-  void _salvarPerfil() {
+  Future<void> _salvarPerfil() async {
+    final novoNome = _nomeController.text.trim();
+    final novoEmail = _emailController.text.trim();
+    final novoTelefone = _telefoneMask.getUnmaskedText();
+
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum usuário logado.')),
+      );
+      return;
+    }
+
     setState(() {
-      _nome = _nomeController.text.trim();
-      _email = _emailController.text.trim();
-      _telefone = _telefoneMask.getMaskedText();
-      _telefoneController.text = _telefone;
-      _editando = false;
+      _carregando = true;
     });
+
+    try {
+      await supabase.auth.updateUser(
+        UserAttributes(
+          email: novoEmail.isNotEmpty ? novoEmail : null,
+          data: {
+            'nome': novoNome,
+            'telefone': novoTelefone,
+            'plano': _plano,
+          },
+        ),
+      ); 
+
+      await supabase.from('perfis').update({
+        'nome': novoNome,
+        'telefone': novoTelefone,
+        'plano': _plano,
+      }).eq('id', user.id); 
+
+      setState(() {
+        _nome = novoNome.isNotEmpty ? novoNome : _nome;
+        _email = novoEmail.isNotEmpty ? novoEmail : _email;
+        _telefone = _telefoneMask.maskText(novoTelefone);
+        _telefoneController.text = _telefone;
+        _editando = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil atualizado com sucesso.')),
+      );
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao atualizar perfil.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _carregando = false);
+      }
+    }
   }
 
   void _abrirPlanosDialog() {
@@ -237,6 +327,52 @@ class _PerfilDialogState extends State<PerfilDialog> {
     );
 
     if (confirmar == true) {
+      await _deletarContaCompleta();
+    }
+  }
+
+  Future<void> _deletarContaCompleta() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum usuário logado.')),
+      );
+      return;
+    }
+
+    setState(() => _carregando = true);
+
+    try {
+      final userId = user.id;
+
+      await supabase.from('perfis').delete().eq('id', userId);
+
+      await supabase.auth.signOut();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Conta apagada dos dados do app. Para remoção total do login, será feita no servidor.',
+          ),
+        ),
+      );
+
+      Navigator.of(context).pop(); 
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao deletar conta. Tente novamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _carregando = false);
     }
   }
 
@@ -258,277 +394,298 @@ class _PerfilDialogState extends State<PerfilDialog> {
             color: isDark ? const Color(0xFF020617) : Colors.white,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(18)),
-                  color: isDark
-                      ? const Color(0xFF111827)
-                      : const Color(0xFF3F4A5A),
-                ),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Perfil',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: _baseFontSize + 4,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                child: Column(
+          child: _carregando
+              ? const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(18)),
+                        color: isDark
+                            ? const Color(0xFF111827)
+                            : const Color(0xFF3F4A5A),
+                      ),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Perfil',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: _baseFontSize + 4,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => Navigator.of(context).pop(),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 18),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isDark
+                                      ? const Color(0xFF1F2937)
+                                      : const Color(0xFFB0BEC5),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.person,
+                                  size: 30,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _nome,
+                                    style: TextStyle(
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _email,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Divider(
+                            height: 1,
                             color: isDark
                                 ? const Color(0xFF1F2937)
-                                : const Color(0xFFB0BEC5),
+                                : const Color(0xFFE5E9F0),
                           ),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.person,
-                            size: 30,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _nome,
-                              style: TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w700,
-                                color:
-                                    isDark ? Colors.white : Colors.black87,
-                              ),
+                          const SizedBox(height: 16),
+                          if (_editando) ...[
+                            _CampoEditavel(
+                              label: 'Nome completo',
+                              controller: _nomeController,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _email,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? Colors.white70
-                                    : Colors.black54,
-                              ),
+                            const SizedBox(height: 12),
+                            _CampoEditavel(
+                              label: 'E-mail',
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 18),
-                    Divider(
-                      height: 1,
-                      color: isDark
-                          ? const Color(0xFF1F2937)
-                          : const Color(0xFFE5E9F0),
-                    ),
-                    const SizedBox(height: 16),
-
-                    if (_editando) ...[
-                      _CampoEditavel(
-                        label: 'Nome completo',
-                        controller: _nomeController,
-                      ),
-                      const SizedBox(height: 12),
-                      _CampoEditavel(
-                        label: 'E-mail',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 12),
-                      _CampoEditavel(
-                        label: 'Telefone',
-                        controller: _telefoneController,
-                        keyboardType: TextInputType.phone,
-                        inputFormatters: <TextInputFormatter>[_telefoneMask],
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        label: 'Plano',
-                        value: _plano,
-                        highlightPlano: true,
-                      ),
-                    ] else ...[
-                      _InfoRow(
-                        label: 'Nome completo',
-                        value: _nome,
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        label: 'E-mail',
-                        value: _email,
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        label: 'Telefone',
-                        value: _telefone,
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        label: 'Plano',
-                        value: _plano,
-                        highlightPlano: true,
-                      ),
-                    ],
-
-                    const SizedBox(height: 22),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _editando ? null : _abrirPlanosDialog,
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: isDark
-                                    ? const Color(0xFF38BDF8)
-                                    : const Color(0xFF60A5FA),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              backgroundColor: isDark
-                                  ? const Color(0xFF020617)
-                                  : Colors.white,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.workspace_premium_outlined,
-                                  size: 18,
-                                  color: _editando
-                                      ? (isDark
-                                          ? Colors.white38
-                                          : Colors.black38)
-                                      : (isDark
-                                          ? const Color(0xFF38BDF8)
-                                          : const Color(0xFF1D4ED8)),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Plano do app',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: _editando
-                                        ? (isDark
-                                            ? Colors.white38
-                                            : Colors.black38)
-                                        : (isDark
-                                            ? Colors.white
-                                            : const Color(0xFF111827)),
-                                  ),
-                                ),
+                            const SizedBox(height: 12),
+                            _CampoEditavel(
+                              label: 'Telefone',
+                              controller: _telefoneController,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: <TextInputFormatter>[
+                                _telefoneMask
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            _InfoRow(
+                              label: 'Plano',
+                              value: _plano,
+                              highlightPlano: true,
+                            ),
+                          ] else ...[
+                            _InfoRow(
+                              label: 'Nome completo',
+                              value: _nome,
+                            ),
+                            const SizedBox(height: 12),
+                            _InfoRow(
+                              label: 'E-mail',
+                              value: _email,
+                            ),
+                            const SizedBox(height: 12),
+                            _InfoRow(
+                              label: 'Telefone',
+                              value: _telefone.isEmpty
+                                  ? 'Não informado'
+                                  : _telefone,
+                            ),
+                            const SizedBox(height: 12),
+                            _InfoRow(
+                              label: 'Plano',
+                              value: _plano,
+                              highlightPlano: true,
+                            ),
+                          ],
+                          const SizedBox(height: 22),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed:
+                                      _editando ? null : _abrirPlanosDialog,
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(
+                                      color: isDark
+                                          ? const Color(0xFF38BDF8)
+                                          : const Color(0xFF60A5FA),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    backgroundColor: isDark
+                                        ? const Color(0xFF020617)
+                                        : Colors.white,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.workspace_premium_outlined,
+                                        size: 18,
+                                        color: _editando
+                                            ? (isDark
+                                                ? Colors.white38
+                                                : Colors.black38)
+                                            : (isDark
+                                                ? const Color(0xFF38BDF8)
+                                                : const Color(0xFF1D4ED8)),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Plano do app',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: _editando
+                                              ? (isDark
+                                                  ? Colors.white38
+                                                  : Colors.black38)
+                                              : (isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF111827)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _carregando
+                                      ? null
+                                      : (_editando
+                                          ? _salvarPerfil
+                                          : _habilitarEdicao),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF38BDF8),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: _carregando
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                          ),
+                                        )
+                                      : Text(
+                                          _editando
+                                              ? 'Salvar'
+                                              : 'Editar perfil',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed:
-                                _editando ? _salvarPerfil : _habilitarEdicao,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF38BDF8),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: _confirmarDelecaoConta,
+                              style: TextButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                backgroundColor: const Color(0xFFB91C1C),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Deletar conta',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 14),
+                          Align(
+                            alignment: Alignment.centerLeft,
                             child: Text(
-                              _editando ? 'Salvar' : 'Editar perfil',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                              'Ao editar ou deletar seus dados, as alterações serão aplicadas em todos os dispositivos.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isDark ? Colors.white54 : Colors.black54,
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: _confirmarDelecaoConta,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: const Color(0xFFB91C1C),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Deletar conta',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Ao editar seus dados, as alterações serão aplicadas em todos os dispositivos.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white54 : Colors.black54,
-                        ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -564,13 +721,11 @@ class _InfoRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          color: isDark
-              ? const Color(0xFF111827)
-              : const Color(0xFFE5F2FF),
+          color:
+              isDark ? const Color(0xFF111827) : const Color(0xFFE5F2FF),
           border: Border.all(
-            color: isDark
-                ? const Color(0xFF38BDF8)
-                : const Color(0xFF60A5FA),
+            color:
+                isDark ? const Color(0xFF38BDF8) : const Color(0xFF60A5FA),
           ),
         ),
         child: Text(
@@ -578,9 +733,8 @@ class _InfoRow extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: isDark
-                ? const Color(0xFFBFDBFE)
-                : const Color(0xFF1D4ED8),
+            color:
+                isDark ? const Color(0xFFBFDBFE) : const Color(0xFF1D4ED8),
           ),
         ),
       );

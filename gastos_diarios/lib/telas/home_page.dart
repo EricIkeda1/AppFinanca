@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../components/adicionar_receita.dart';
 import '../components/adicionar_despesa.dart';
 import '../components/movimentos.dart';
@@ -9,51 +10,42 @@ import '../components/configuracoes.dart';
 import '../components/opcoes.dart';
 import '../login/login.dart';
 
+final supabase = Supabase.instance.client;
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  String _getUserDisplayName() {
+    final user = supabase.auth.currentUser; 
+    if (user == null) return 'usuário';
+
+    final meta = user.userMetadata ?? {};
+    final nome = meta['nome'] as String?;
+    if (nome != null && nome.trim().isNotEmpty) {
+      return nome.trim();
+    }
+
+    return user.email ?? 'usuário';
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final displayName = _getUserDisplayName();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       resizeToAvoidBottomInset: false,
-      body: const SafeArea(
+      body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _DashboardAppBar()),
             SliverToBoxAdapter(
+              child: _DashboardAppBar(displayName: displayName),
+            ),
+            const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: Column(
-                  children: [
-                    _SummaryCard(
-                      title: 'Receitas',
-                      amount: 'R\$ 5.420,00',
-                      subtitle: '+12,5% vs mês anterior',
-                      amountColor: Color(0xFF00A86B),
-                      iconBg: Color(0xFFE5F8EE),
-                      icon: Icons.trending_up,
-                    ),
-                    SizedBox(height: 6),
-                    _SummaryCard(
-                      title: 'Despesas',
-                      amount: 'R\$ 3.180,50',
-                      subtitle: '+8,3% vs mês anterior',
-                      amountColor: Color(0xFFE53935),
-                      iconBg: Color(0xFFFDECEC),
-                      icon: Icons.trending_down,
-                    ),
-                    SizedBox(height: 8),
-                    _BalanceCard(),
-                    SizedBox(height: 12),
-                    _ActionsGrid(),
-                    SizedBox(height: 16),
-                    _LastTransactionsCard(),
-                    SizedBox(height: 14),
-                  ],
-                ),
+                child: _HomeBody(),
               ),
             ),
           ],
@@ -63,8 +55,46 @@ class HomePage extends StatelessWidget {
   }
 }
 
+class _HomeBody extends StatelessWidget {
+  const _HomeBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        _SummaryCard(
+          title: 'Receitas',
+          amount: 'R\$ 5.420,00',
+          subtitle: '+12,5% vs mês anterior',
+          amountColor: Color(0xFF00A86B),
+          iconBg: Color(0xFFE5F8EE),
+          icon: Icons.trending_up,
+        ),
+        SizedBox(height: 6),
+        _SummaryCard(
+          title: 'Despesas',
+          amount: 'R\$ 3.180,50',
+          subtitle: '+8,3% vs mês anterior',
+          amountColor: Color(0xFFE53935),
+          iconBg: Color(0xFFFDECEC),
+          icon: Icons.trending_down,
+        ),
+        SizedBox(height: 8),
+        _BalanceCard(),
+        SizedBox(height: 12),
+        _ActionsGrid(),
+        SizedBox(height: 16),
+        _LastTransactionsCard(),
+        SizedBox(height: 14),
+      ],
+    );
+  }
+}
+
 class _DashboardAppBar extends StatelessWidget {
-  const _DashboardAppBar();
+  const _DashboardAppBar({required this.displayName});
+
+  final String displayName;
 
   static final GlobalKey _profileBlockKey = GlobalKey();
 
@@ -169,6 +199,7 @@ class _DashboardAppBar extends StatelessWidget {
         ConfiguracoesDialog.show(context);
         break;
       case 'sair':
+        await supabase.auth.signOut(); 
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -226,7 +257,8 @@ class _DashboardAppBar extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'Olá, João Silva',
+                    'Olá, $displayName',
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,

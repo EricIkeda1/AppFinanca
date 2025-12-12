@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../telas/home_page.dart'; // para navegar após login
 import '../login/esqueceusenha.dart'; // tela de recuperação
-import '../login/cadastrar.dart';    // <<< importar tela de cadastro
+import '../login/cadastrar.dart'; // tela de cadastro
+
+final supabase = Supabase.instance.client;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,12 +19,93 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _senhaController = TextEditingController();
   bool _senhaVisivel = false;
   bool _lembrarMe = false;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPreferenciasLogin();
+  }
+
+  Future<void> _carregarPreferenciasLogin() async {
+    final prefs = await SharedPreferences.getInstance(); // [web:119][web:122]
+    final lembrar = prefs.getBool('lembrar_me') ?? false;
+    final emailSalvo = prefs.getString('email_lembrado') ?? '';
+
+    setState(() {
+      _lembrarMe = lembrar;
+      if (lembrar && emailSalvo.isNotEmpty) {
+        _emailController.text = emailSalvo;
+      }
+    });
+  }
+
+  Future<void> _salvarPreferenciasLogin(String email) async {
+    final prefs = await SharedPreferences.getInstance(); // [web:119][web:122]
+    if (_lembrarMe) {
+      await prefs.setBool('lembrar_me', true);
+      await prefs.setString('email_lembrado', email);
+    } else {
+      await prefs.setBool('lembrar_me', false);
+      await prefs.remove('email_lembrado');
+    }
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _senhaController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final senha = _senhaController.text.trim();
+
+    if (email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha e-mail e senha.')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final res = await supabase.auth.signInWithPassword(
+        email: email,
+        password: senha,
+      ); // login Supabase [web:27][web:31]
+
+      if (!mounted) return;
+
+      if (res.user != null) {
+        // salva ou limpa preferências conforme checkbox
+        await _salvarPreferenciasLogin(email);
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Falha ao entrar. Verifique os dados.'),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro inesperado ao entrar.')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -277,7 +362,7 @@ class _LoginPageState extends State<LoginPage> {
                           Row(
                             children: [
                               Row(
-                                mainAxisSize: MainAxisSize.min,
+                              mainAxisSize: MainAxisSize.min,
                                 children: [
                                   SizedBox(
                                     width: 20,
@@ -322,17 +407,17 @@ class _LoginPageState extends State<LoginPage> {
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 onPressed: () {
-                                  // NAVEGA PARA A TELA DE RECUPERAÇÃO DE SENHA
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => const EsqueceuSenhaPage(),
+                                      builder: (_) =>
+                                          const EsqueceuSenhaPage(),
                                     ),
                                   );
                                 },
                                 child: const Text(
                                   'Esqueceu a senha?',
                                   style: TextStyle(
-                                    color: Color(0xFF2563EB), // AZUL
+                                    color: Color(0xFF2563EB), // azul
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -366,21 +451,27 @@ class _LoginPageState extends State<LoginPage> {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                 ),
-                                onPressed: () {
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (_) => const HomePage(),
-                                    ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Entrar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                                onPressed: _loading ? null : _login,
+                                child: _loading
+                                    ? const SizedBox(
+                                        height: 22,
+                                        width: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.4,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Entrar',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
@@ -430,7 +521,6 @@ class _LoginPageState extends State<LoginPage> {
                                 backgroundColor: Colors.white,
                               ),
                               onPressed: () {
-                                // NAVEGA PARA A TELA DE CADASTRO
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => const CadastrarPage(),

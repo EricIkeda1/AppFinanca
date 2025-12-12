@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'termodeuso.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'termodeuso.dart';
+
+final supabase = Supabase.instance.client;
 
 class CadastrarPage extends StatefulWidget {
   const CadastrarPage({super.key});
@@ -20,6 +23,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
   bool _senhaVisivel = false;
   bool _confirmarSenhaVisivel = false;
   bool _aceitoTermos = false;
+  bool _loading = false;
 
   late TapGestureRecognizer _termosRecognizer;
 
@@ -43,7 +47,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
     super.dispose();
   }
 
-  void _criarConta() {
+  Future<void> _criarConta() async {
     if (!_aceitoTermos) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -53,11 +57,76 @@ class _CadastrarPageState extends State<CadastrarPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Conta criada com sucesso (exemplo).'),
-      ),
-    );
+    final nome = _nomeController.text.trim();
+    final email = _emailController.text.trim();
+    final telefone = _telefoneController.text.trim();
+    final senha = _senhaController.text.trim();
+    final confirmarSenha = _confirmarSenhaController.text.trim();
+
+    if (nome.isEmpty || email.isEmpty || telefone.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos.')),
+      );
+      return;
+    }
+
+    if (senha.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres.')),
+      );
+      return;
+    }
+
+    if (senha != confirmarSenha) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('As senhas não coincidem.')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final res = await supabase.auth.signUp(
+        email: email,
+        password: senha,
+        data: {
+          'nome': nome,
+          'telefone': telefone,
+          'plano': 'Gratuito',
+        },
+      );
+
+      if (!mounted) return;
+
+      if (res.user != null) {
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Conta criada com sucesso! Verifique seu e-mail se a confirmação estiver ativada.',
+            ),
+          ),
+        );
+        Navigator.of(context).pop(); 
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível criar a conta.')),
+        );
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro inesperado ao criar conta.')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -186,7 +255,6 @@ class _CadastrarPageState extends State<CadastrarPage> {
                         ],
                       ),
                     ),
-
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(28, 24, 28, 26),
@@ -216,9 +284,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
                             icon: Icons.person_outline,
                             keyboardType: TextInputType.name,
                           ),
-
                           const SizedBox(height: 16),
-
                           const Text(
                             'E-mail',
                             style: TextStyle(
@@ -234,9 +300,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
                             icon: Icons.mail_outline,
                             keyboardType: TextInputType.emailAddress,
                           ),
-
                           const SizedBox(height: 16),
-
                           const Text(
                             'Telefone',
                             style: TextStyle(
@@ -252,9 +316,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
                             icon: Icons.phone_in_talk_outlined,
                             keyboardType: TextInputType.phone,
                           ),
-
                           const SizedBox(height: 18),
-
                           const Text(
                             'Senha',
                             style: TextStyle(
@@ -273,9 +335,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
                               });
                             },
                           ),
-
                           const SizedBox(height: 16),
-
                           const Text(
                             'Confirmar Senha',
                             style: TextStyle(
@@ -295,9 +355,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
                               });
                             },
                           ),
-
                           const SizedBox(height: 18),
-
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -365,9 +423,7 @@ class _CadastrarPageState extends State<CadastrarPage> {
                               ],
                             ),
                           ),
-
                           const SizedBox(height: 22),
-
                           SizedBox(
                             height: 52,
                             child: DecoratedBox(
@@ -391,21 +447,31 @@ class _CadastrarPageState extends State<CadastrarPage> {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                 ),
-                                onPressed: _criarConta,
-                                child: const Text(
-                                  'Criar Conta',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                                onPressed: _loading ? null : _criarConta,
+                                child: _loading
+                                    ? const SizedBox(
+                                        height: 22,
+                                        width: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.4,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Criar Conta',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 22),
-
                           Center(
                             child: TextButton(
                               onPressed: () {

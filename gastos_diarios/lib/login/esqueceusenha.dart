@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class EsqueceuSenhaPage extends StatefulWidget {
   const EsqueceuSenhaPage({super.key});
@@ -9,11 +12,56 @@ class EsqueceuSenhaPage extends StatefulWidget {
 
 class _EsqueceuSenhaPageState extends State<EsqueceuSenhaPage> {
   final TextEditingController _emailController = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _enviarReset() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe o e-mail cadastrado.')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        // se tiver deep link configurado:
+        // redirectTo: 'https://seu-dominio.com/update-password',
+      ); // envia e-mail de reset [web:35][web:44][web:37]
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Se o e-mail existir, enviaremos um link de recuperação.'),
+        ),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao enviar link de recuperação.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -26,8 +74,8 @@ class _EsqueceuSenhaPageState extends State<EsqueceuSenhaPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFE0F2FE), 
-              Color(0xFFF9FAFB), 
+              Color(0xFFE0F2FE),
+              Color(0xFFF9FAFB),
             ],
           ),
         ),
@@ -257,23 +305,27 @@ class _EsqueceuSenhaPageState extends State<EsqueceuSenhaPage> {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                 ),
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Se o e-mail existir, enviaremos um link de recuperação.',
+                                onPressed: _loading ? null : _enviarReset,
+                                child: _loading
+                                    ? const SizedBox(
+                                        height: 22,
+                                        width: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.4,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Enviar Link de Recuperação',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Enviar Link de Recuperação',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
                               ),
                             ),
                           ),
