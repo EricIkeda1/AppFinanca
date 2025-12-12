@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../telas/home_page.dart'; // para navegar após login
-import '../login/esqueceusenha.dart'; // tela de recuperação
-import '../login/cadastrar.dart'; // tela de cadastro
+import '../telas/home_page.dart';
+import '../login/esqueceusenha.dart';
+import '../login/cadastrar.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -75,12 +75,11 @@ class _LoginPageState extends State<LoginPage> {
       final res = await supabase.auth.signInWithPassword(
         email: email,
         password: senha,
-      ); // login Supabase [web:27][web:31]
+      ); // [web:27][web:31]
 
       if (!mounted) return;
 
       if (res.user != null) {
-        // salva ou limpa preferências conforme checkbox
         await _salvarPreferenciasLogin(email);
 
         Navigator.of(context).pushReplacement(
@@ -111,10 +110,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // NÃO deixa a tela subir quando o teclado aparece
       resizeToAvoidBottomInset: false,
       body: Container(
-        // FUNDO CLARO SUAVE
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -126,15 +123,13 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         child: Center(
-          // sem SingleChildScrollView: card fica FIXO
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
-              // CARD EXTERNO MAIS ESCURO + SOMBRA
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6), // levemente mais escuro que o fundo
+                  color: const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
@@ -147,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // CABEÇALHO ESCURO
+                    // Cabeçalho
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -227,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
 
-                    // FORMULÁRIO BRANCO (PARTE DE BAIXO DO CARD)
+                    // Formulário
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(28, 26, 28, 30),
@@ -253,6 +248,9 @@ class _LoginPageState extends State<LoginPage> {
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.none,
+                            enableSuggestions: false, // evita sugestões que pulam após "."
                             style: const TextStyle(
                               color: Color(0xFF111827),
                               fontSize: 14,
@@ -306,6 +304,9 @@ class _LoginPageState extends State<LoginPage> {
                           TextField(
                             controller: _senhaController,
                             obscureText: !_senhaVisivel,
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.none,
+                            enableSuggestions: false,
                             style: const TextStyle(
                               color: Color(0xFF111827),
                               fontSize: 16,
@@ -362,7 +363,7 @@ class _LoginPageState extends State<LoginPage> {
                           Row(
                             children: [
                               Row(
-                              mainAxisSize: MainAxisSize.min,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   SizedBox(
                                     width: 20,
@@ -409,15 +410,14 @@ class _LoginPageState extends State<LoginPage> {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) =>
-                                          const EsqueceuSenhaPage(),
+                                      builder: (_) => const EsqueceuSenhaPage(),
                                     ),
                                   );
                                 },
                                 child: const Text(
                                   'Esqueceu a senha?',
                                   style: TextStyle(
-                                    color: Color(0xFF2563EB), // azul
+                                    color: Color(0xFF2563EB),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                   ),
